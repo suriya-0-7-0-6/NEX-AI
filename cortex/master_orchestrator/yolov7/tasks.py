@@ -1,8 +1,16 @@
+from flask import current_app
+import sys
 from cortex.extensions import celery, socketio
-from .utils import add_arch_path_to_sys_path, load_model, detect_using_yolov7
+from .utils import load_model, detect_using_yolov7
 
 
 _yolov7_model = None
+
+def add_arch_path_to_sys_path():
+    YOLOV7_DIR = current_app.config['MODEL_ARCHS_DIR'] + '/yolov7'
+    if YOLOV7_DIR not in sys.path:
+        sys.path.insert(0, YOLOV7_DIR)
+
 
 @celery.task(bind=True)
 def detect(self, img_byts_file, modelinfo, device='cpu'):

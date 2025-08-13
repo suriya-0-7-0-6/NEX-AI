@@ -9,11 +9,6 @@ import sys
 import os
 
 
-def add_arch_path_to_sys_path():
-    YOLOV7_DIR = current_app.config['MODEL_ARCHS_DIR'] + '/yolov7'
-    if YOLOV7_DIR not in sys.path:
-        sys.path.insert(0, YOLOV7_DIR)
-
 def convert_img_file_to_numpy_array(file_bytes):
     np_img = np.frombuffer(file_bytes, np.uint8)
     cv2_img_bgr = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
