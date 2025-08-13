@@ -58,8 +58,8 @@ Thumbs.db
 # ------------------------------
 # External model arch repos
 # ------------------------------
-grey_matter/model_archs/*
-!grey_matter/model_archs/List_of_model_archs.py
+# grey_matter/model_archs/*
+# !grey_matter/model_archs/List_of_model_archs.py
 
 # ------------------------------
 # Machine Learning Artifacts
