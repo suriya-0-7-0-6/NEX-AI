@@ -7,6 +7,7 @@ CONFIG = {
   "task_name": "signboard_detection",
   "description": "Detect various types of road signboards in images.",
   "dnnarch": "yolov7",
+  "dnnarch_repo_path": os.path.join(BaseConfigurations.MODEL_ARCHS_DIR, 'yolov7'),
   "weights_path": os.path.join(BaseConfigurations.WEIGHTS_DIR, 'yolov7_signboard.pt'),
   "input_size": [640, 640],
   "classes": [

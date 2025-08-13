@@ -1,27 +1,18 @@
 from flask import current_app, jsonify
-import torch
-from torchvision import transforms
-import cv2
-import os
-import numpy as np
-import sys
-from PIL import Image, ImageDraw, ImageFont
-
-
-YOLOV7_DIR = os.path.join(
-    os.path.dirname(__file__) 
-)
-
-YOLOV7_ROOT = os.path.abspath(YOLOV7_DIR)
-
-print(YOLOV7_DIR)
-print(YOLOV7_ROOT)
-if YOLOV7_ROOT not in sys.path:
-    sys.path.insert(0, YOLOV7_ROOT)
-
-from models.experimental import attempt_load
-from utils.general import non_max_suppression
 from cortex.extensions import socketio
+from PIL import Image, ImageDraw, ImageFont
+from torchvision import transforms
+import numpy as np
+import torch
+import cv2
+import sys
+import os
+
+
+def add_arch_path_to_sys_path():
+    YOLOV7_DIR = current_app.config['MODEL_ARCHS_DIR'] + '/yolov7'
+    if YOLOV7_DIR not in sys.path:
+        sys.path.insert(0, YOLOV7_DIR)
 
 def convert_img_file_to_numpy_array(file_bytes):
     np_img = np.frombuffer(file_bytes, np.uint8)
@@ -64,7 +55,12 @@ def draw_detections(img, detections, classes, conf_thresh):
             draw.text((x1, y1-20), f"{classes[int(cls)]}: {conf:.2f}", fill="red", font=font)
     return drwn_img
 
+def load_model(weights, map_location='cpu'):
+    from grey_matter.model_archs.yolov7.models.experimental import attempt_custom_load
+    return attempt_custom_load(weights=weights, map_location=map_location)
+
 def detect_using_yolov7(model, img_byts_file, modelinfo, device='cpu'):
+    from grey_matter.model_archs.yolov7.utils.general import non_max_suppression
     print(f"[YOLOv7 Bridge] Running inference")
     conf_thresh = modelinfo.get('confidence_threshold', 0.5)
     nms_thresh = modelinfo.get('nms_threshold', 0.45)
