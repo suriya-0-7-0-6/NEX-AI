@@ -1,0 +1,22 @@
+<html>
+    <head>
+        <title>AI Inference</title>
+    </head>
+    <body>
+        <form action='/ai_inference' method='POST' enctype='multipart/form-data'>
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.problem_id.label() }}
+                {{ form.problem_id() }}
+            </p>
+            <p>
+                {{ form.upload_image.label() }}
+                {{ form.upload_image() }}             
+            </p>
+            </p>{{ form.submit() }}</p>
+        </form>
+        <p id='output-container'></p>
+        <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+        <script src="{{ url_for('static', filename='js/ai_inference.js') }}"></script>
+    </body>
+</html>

@@ -1,0 +1,91 @@
+# ------------------------------
+# Python cache and compiled files
+# ------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# ------------------------------
+# Environment files
+# ------------------------------
+.env
+*.env
+venv/
+ENV/
+env/
+.venv/
+
+# ------------------------------
+# Byte-compiled / optimized / DLL files
+# ------------------------------
+*.so
+*.dll
+*.dylib
+
+# ------------------------------
+# Distribution / packaging
+# ------------------------------
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ------------------------------
+# Jupyter Notebook checkpoints
+# ------------------------------
+.ipynb_checkpoints
+
+# ------------------------------
+# IDE/editor configs
+# ------------------------------
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ------------------------------
+# Logs
+# ------------------------------
+*.log
+
+# ------------------------------
+# OS-specific files
+# ------------------------------
+.DS_Store
+Thumbs.db
+
+# ------------------------------
+# External model arch repos
+# ------------------------------
+grey_matter/model_archs/*
+
+# ------------------------------
+# Machine Learning Artifacts
+# ------------------------------
+# Model weights / checkpoints
+*.pt
+*.pth
+*.ckpt
+*.weights
+*.onnx
+*.tflite
+*.h5
+*.pb
+*.joblib
+*.pkl
+
+# Training runs / experiment logs
+runs/
+wandb/
+lightning_logs/
+
+# ------------------------------
+# Temporary uploads & generated data
+# ------------------------------
+uploads/
+results/
+temp/
+tmp/
+*.tmp
+# ------------------------------
