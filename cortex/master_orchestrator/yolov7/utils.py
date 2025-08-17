@@ -51,11 +51,11 @@ def draw_detections(img, detections, classes, conf_thresh):
     return drwn_img
 
 def load_model(weights, map_location='cpu'):
-    from grey_matter.model_archs.yolov7.models.experimental import attempt_custom_load
+    from models.experimental import attempt_custom_load
     return attempt_custom_load(weights=weights, map_location=map_location)
 
 def detect_using_yolov7(model, img_byts_file, modelinfo, device='cpu'):
-    from grey_matter.model_archs.yolov7.utils.general import non_max_suppression
+    from utils.general import non_max_suppression
     print(f"[YOLOv7 Bridge] Running inference")
     conf_thresh = modelinfo.get('confidence_threshold', 0.5)
     nms_thresh = modelinfo.get('nms_threshold', 0.45)

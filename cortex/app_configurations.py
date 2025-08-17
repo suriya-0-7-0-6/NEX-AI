@@ -23,8 +23,10 @@ class BaseConfigurations:
     LOGS_DIR = os.path.join(PROJECT_DIR, 'grey_matter', 'logs')
 
     UPLOADS_DIR = os.path.join(PROJECT_DIR, 'uploads')
+    os.makedirs(UPLOADS_DIR, exist_ok=True)
 
     RESULTS_DIR = os.path.join(PROJECT_DIR, 'results')
+    os.makedirs(RESULTS_DIR, exist_ok=True)
 
     SOCKETIO_MESSAGE_QUEUE = 'redis://localhost:6379/0'
 

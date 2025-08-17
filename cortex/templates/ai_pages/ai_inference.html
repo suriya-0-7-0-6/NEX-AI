@@ -1,22 +1,38 @@
-<html>
-    <head>
-        <title>AI Inference</title>
-    </head>
-    <body>
-        <form action='/ai_inference' method='POST' enctype='multipart/form-data'>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Inference</title>
+    <link rel="icon" type="image/png" sizes="16x16S" href="{{ url_for('static', filename='favicons/favicon-16x16.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_inference.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>NEX AI</h1>
+        <form action="/ai_inference" method="POST" enctype="multipart/form-data" class="inference-form">
             {{ form.hidden_tag() }}
-            <p>
-                {{ form.problem_id.label() }}
-                {{ form.problem_id() }}
-            </p>
-            <p>
-                {{ form.upload_image.label() }}
-                {{ form.upload_image() }}             
-            </p>
-            </p>{{ form.submit() }}</p>
+            
+            <div class="form-group">
+                {{ form.problem_id.label(class="form-label") }}
+                {{ form.problem_id(class="form-input") }}
+            </div>
+
+            <div class="form-group">
+                {{ form.upload_image.label(class="form-label") }}
+                {{ form.upload_image(class="form-input upload-input") }}
+            </div>
+
+            <div class="form-group">
+                {{ form.submit(class="btn") }}
+            </div>
         </form>
-        <p id='output-container'></p>
-        <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-        <script src="{{ url_for('static', filename='js/ai_inference.js') }}"></script>
-    </body>
+    </div>
+
+    <div id="output-container" class="output-container"></div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/ai_inference.js') }}"></script>
+</body>
 </html>
