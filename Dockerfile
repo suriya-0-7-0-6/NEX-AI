@@ -59,6 +59,6 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy application code
 COPY . .
 
-EXPOSE 5000 6379
+EXPOSE 5000
 
 CMD ["python", "start_app.py"]
