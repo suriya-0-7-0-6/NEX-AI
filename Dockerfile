@@ -3,14 +3,16 @@ FROM nvidia/cuda:12.6.0-cudnn-runtime-ubuntu20.04 AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    PIP_ROOT_USER_ACTION=ignore
+
 
 WORKDIR /app
 
-# Install Python + pip (builder needs full dev stack)
+# Install Python 3.8 + pip + build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3.10 \
-        python3.10-distutils \
+        python3 \
+        python3-distutils \
         python3-pip \
         build-essential \
         git \
@@ -20,15 +22,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         cmake \
         ninja-build \
         ffmpeg \
-    && ln -s /usr/bin/python3.10 /usr/bin/python \
-    && ln -s /usr/bin/pip3 /usr/bin/pip \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip + install deps
+# Ensure "python" command points to python3
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+
+# Upgrade pip, setuptools, wheel (industry standard best practice)
+RUN python -m pip install --upgrade pip setuptools wheel
+
+# Copy requirements early (better caching)
 COPY requirements.txt .
-RUN pip install --upgrade pip setuptools wheel \
- && pip install --use-pep517 onnxsim \
- && pip install -r requirements.txt
+
+# Install build-time deps + project requirements
+RUN python -m pip install --use-pep517 onnxsim \
+    && python -m pip install -r requirements.txt
 
 
 # ---------- Stage 2: Runtime ----------
@@ -40,20 +47,24 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 WORKDIR /app
 
-# Install only what runtime needs (no compilers)
+# Install minimal runtime dependencies (no compilers)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3.10 \
-        python3.10-distutils \
+        python3 \
+        python3-distutils \
         python3-pip \
         libglib2.0-0 \
         libgl1 \
         ffmpeg \
-    && ln -s /usr/bin/python3.10 /usr/bin/python \
-    && ln -s /usr/bin/pip3 /usr/bin/pip \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python packages from builder
-COPY --from=builder /usr/local/lib/python3.10 /usr/local/lib/python3.10
+# Ensure "python" command points to python3
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+
+# Upgrade pip (so runtime matches builder)
+RUN python -m pip install --upgrade pip setuptools wheel
+
+# Copy Python environment from builder
+COPY --from=builder /usr/local/lib/python3.8 /usr/local/lib/python3.8
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
