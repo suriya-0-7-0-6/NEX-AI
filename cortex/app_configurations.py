@@ -28,11 +28,14 @@ class BaseConfigurations:
     RESULTS_DIR = os.path.join(PROJECT_DIR, 'results')
     os.makedirs(RESULTS_DIR, exist_ok=True)
 
-    SOCKETIO_MESSAGE_QUEUE = 'redis://localhost:6379/0'
+    REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+    REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+
+    SOCKETIO_MESSAGE_QUEUE = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
 
     CELERY = {
-        'broker_url': 'redis://localhost:6379/0',
-        'result_backend': 'redis://localhost:6379/0',
+        'broker_url': f'redis://{REDIS_HOST}:{REDIS_PORT}/0',
+        'result_backend': f'redis://{REDIS_HOST}:{REDIS_PORT}/0',
         'task_serializer': 'json',
         'result_serializer': 'json',
         'accept_content': ['json'],
