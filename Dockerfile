@@ -34,7 +34,13 @@ RUN pip install --upgrade pip setuptools wheel \
     numpy \
     celery \
     opencv-python \
-    redis
+    redis \
+    pandas \
+    tqdm \
+    PyYaml \
+    matplotlib \
+    seaborn \
+    scipy
 
 RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
 

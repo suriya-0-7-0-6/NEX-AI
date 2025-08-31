@@ -28,7 +28,13 @@ class BaseConfigurations:
     RESULTS_DIR = os.path.join(PROJECT_DIR, 'results')
     os.makedirs(RESULTS_DIR, exist_ok=True)
 
-    REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+    if os.getenv("LOCAL_DEV", "false").lower() == "true":
+        REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+    else:
+        REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+
+
+    # REDIS_HOST = os.getenv("REDIS_HOST", "redis")
     REDIS_PORT = os.getenv("REDIS_PORT", "6379")
 
     SOCKETIO_MESSAGE_QUEUE = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'

@@ -42,12 +42,11 @@ def rescale_bounding_boxes(old_size, new_size, boxes):
 def draw_detections(img, detections, classes, conf_thresh):
     drwn_img = Image.fromarray(img)
     draw = ImageDraw.Draw(drwn_img)
-    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size=15)  
     for det in detections[0]:
         x1, y1, x2, y2, conf, cls = det.tolist()
         if conf > conf_thresh:
             draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
-            draw.text((x1, y1-20), f"{classes[int(cls)]}: {conf:.2f}", fill="red", font=font)
+            draw.text((x1, y1-20), f"{classes[int(cls)]}: {conf:.2f}", fill="red")
     return drwn_img
 
 def load_model(weights, map_location='cpu'):
