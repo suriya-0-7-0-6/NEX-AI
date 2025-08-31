@@ -15,8 +15,6 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-    volumes:
-      - /home/suriya0706/Desktop/dump:/app/dump
 
   redis:
     image: redis:7
