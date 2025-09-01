@@ -47,10 +47,15 @@ def ai_inference():
             
             if not modelinfo:
                 return {'error': 'Model configuration not found'}, 404
+            
+            try:
+                dnnarch = modelinfo['dnnarch']
+                tasks_module = importlib.import_module(f"cortex.master_orchestrator.{dnnarch}.tasks")
+                detect_task = getattr(tasks_module, 'detect')
+            except (ImportError, AttributeError) as e:
+                return {'error': f"Failed to load detect task: {e}"}, 500
 
-            task = importlib.import_module(f"cortex.master_orchestrator.yolov7")
-
-            task.detect.apply_async(
+            detect_task.apply_async(
                 args=[upload_image_bytes_file, modelinfo, 'cpu']
             )
 

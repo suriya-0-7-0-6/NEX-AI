@@ -40,7 +40,8 @@ RUN pip install --upgrade pip setuptools wheel \
     PyYaml \
     matplotlib \
     seaborn \
-    scipy
+    scipy \
+    ultralytics
 
 RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
 
