@@ -8,7 +8,7 @@ CONFIG = {
   "description": "Detect potholes in images.",
   "dnnarch": "yolov8",
   "dnnarch_repo_path": None,
-  "weights_path": os.path.join(BaseConfigurations.WEIGHTS_DIR, 'yolov8 _pothole.pt'),
+  "weights_path": os.path.join(BaseConfigurations.WEIGHTS_DIR, 'yolov8_pothole.pt'),
   "input_size": [640, 640],
   "classes": [
     "pothole",

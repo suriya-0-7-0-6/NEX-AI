@@ -30,7 +30,7 @@ def detect_using_yolov8(model, img_byts_file, modelinfo, device):
     img_file = convert_img_file_to_numpy_array(img_byts_file)
 
     print("********************************************")
-    print(model.info())
+    print(model)
     print("********************************************")
 
     result_img_name = f"{modelinfo['id']}_result.png"
