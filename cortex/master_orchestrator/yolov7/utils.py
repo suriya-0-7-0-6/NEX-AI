@@ -50,6 +50,7 @@ def draw_detections(img, detections, classes, conf_thresh):
     return drwn_img
 
 def load_model(weights, map_location='cpu'):
+    print(f" YOLOV7: {sys.path}")
     from models.experimental import attempt_custom_load
     return attempt_custom_load(weights=weights, map_location=map_location)
 

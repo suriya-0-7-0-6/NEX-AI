@@ -21,4 +21,8 @@ def init_celery(celery, app):
                 return self.run(*args, **kwargs)
     celery.Task = ContextTask
     celery.config_from_object(app.config['CELERY'])
-    celery.autodiscover_tasks(['cortex.master_orchestrator.yolov7.tasks', 'cortex.master_orchestrator.yolov8.tasks'])
+    celery.autodiscover_tasks([
+        'cortex.master_orchestrator.yolov7.tasks', 
+        'cortex.master_orchestrator.yolov8.tasks',
+        'cortex.master_orchestrator.yolov5.tasks'
+    ])

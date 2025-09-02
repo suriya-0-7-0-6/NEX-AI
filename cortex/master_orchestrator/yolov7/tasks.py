@@ -9,7 +9,8 @@ _yolov7_model = None
 def add_arch_path_to_sys_path():
     import site
     YOLOV7_DIR = current_app.config['MODEL_ARCHS_DIR'] + '/yolov7'
-    site.addsitedir(YOLOV7_DIR)
+    # site.addsitedir(YOLOV7_DIR)
+    sys.path.insert(0, YOLOV7_DIR)
 
 
 @celery.task(bind=True)

@@ -1,3 +1,4 @@
 MODEL_ARCHS_LIST = [
-    "yolov7"
+    "yolov7",
+    "yolov5"
 ]

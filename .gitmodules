@@ -1,3 +1,6 @@
 [submodule "grey_matter/model_archs/yolov7"]
 	path = grey_matter/model_archs/yolov7
 	url = https://github.com/suriya-0-7-0-6/yolov7.git
+[submodule "grey_matter/model_archs/yolov5"]
+	path = grey_matter/model_archs/yolov5
+	url = https://github.com/ultralytics/yolov5.git
