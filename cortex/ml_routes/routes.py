@@ -44,7 +44,7 @@ def ai_inference():
                 return {'error': 'Problem ID is required'}, 400
 
             modelinfo = fetch_configs(problem_id)
-            
+
             if not modelinfo:
                 return {'error': 'Model configuration not found'}, 404
             
@@ -55,11 +55,51 @@ def ai_inference():
             except (ImportError, AttributeError) as e:
                 return {'error': f"Failed to load detect task: {e}"}, 500
 
-            detect_task.apply_async(
-                args=[upload_image_bytes_file, modelinfo, 'cpu']
-            )
+            detect_task.apply_async(args=[upload_image_bytes_file, modelinfo])
 
             return render_template('ai_pages/ai_inference.html', form=AIForm, info=info), 200
 
     return render_template('ai_pages/ai_inference.html', form=AIForm, info=""), 200
     
+
+
+import cortex.master_orchestrator.yolov5.tasks as yolov5_tasks
+from cortex.master_orchestrator.yolov5.utils import check_if_any_detection_present
+
+@ml_api.route('/has_detection', methods=['POST'])
+def has_detection():
+    import torch
+    import os
+    problem_id = request.form.get("problem_id")
+    file = request.files.get("image")
+
+    if not problem_id:
+        return {"error": "Problem ID is required"}, 400
+    if not file:
+        return {"error": "No image uploaded"}, 400  
+
+    modelinfo = fetch_configs(problem_id)
+    if not modelinfo:
+        return {"error": "Model configuration not found"}, 404
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    yolov5_tasks.set_active_arch(modelinfo['dnnarch'])
+    map_location = torch.device("cpu")
+    model_loaded_again = False
+    
+    if yolov5_tasks._yolov5_model is None:
+        model_loaded_again = True
+        yolov5_tasks._yolov5_model = yolov5_tasks.load_model(
+            weights=modelinfo['weights_path'], 
+            map_location=map_location
+        )
+
+    any_detections, detections = check_if_any_detection_present(
+        yolov5_tasks._yolov5_model, file.read(), modelinfo, map_location
+    )
+
+    return {
+        "has_detection": any_detections,
+        "detections": detections,
+        "model_loaded_again": model_loaded_again
+    }, 200

@@ -45,9 +45,7 @@ def load_model(weights, map_location='cpu'):
 
 def detect_using_yolov5(model, img_byts_file, modelinfo, device):
     from utils.torch_utils import select_device
-    from utils.general import non_max_suppression, scale_boxes
-
-    
+    from utils.general import non_max_suppression, scale_boxes    
 
     conf_thresh = modelinfo.get('confidence_threshold', 0.5)
     nms_thresh = modelinfo.get('nms_threshold', 0.45)
@@ -84,7 +82,6 @@ def detect_using_yolov5(model, img_byts_file, modelinfo, device):
     result_img_file_path = os.path.join(current_app.config['RESULTS_DIR'], result_img_name)
     drwn_img.save(result_img_file_path)
 
-    # Emit results
     result_url = f'/uploads/{result_img_name}'
     socketio.emit(
         'result',
@@ -92,3 +89,39 @@ def detect_using_yolov5(model, img_byts_file, modelinfo, device):
     )
 
     return result_img_file_path
+
+
+def check_if_any_detection_present(model, img_byts_file, modelinfo, device):
+    from utils.torch_utils import select_device
+    from utils.general import non_max_suppression, scale_boxes    
+
+    conf_thresh = modelinfo.get('confidence_threshold', 0.5)
+    nms_thresh = modelinfo.get('nms_threshold', 0.45)
+    input_size = modelinfo.get('input_size', 640)
+
+    img_file = convert_img_file_to_numpy_array(img_byts_file)
+    img_tensor = prepare_input(img_file, input_size, device)
+    original_shape = img_file.shape[:2]
+
+    with torch.no_grad():
+        pred = model(img_tensor)
+        detections = non_max_suppression(pred, conf_thresh, nms_thresh)[0]
+
+    output = []
+    if detections is not None and len(detections):
+        detections[:, :4] = scale_boxes(img_tensor.shape[2:], detections[:, :4], original_shape).round()
+
+        for box in detections:
+            x1, y1, x2, y2, conf, cls_id = box
+            if conf < conf_thresh:
+                continue
+            label = modelinfo['classes'][int(cls_id)]
+            output.append({
+                'bbox': [int(x1), int(y1), int(x2), int(y2)],
+                'confidence': float(conf),
+                'class': label
+            })
+        
+        return True, output
+    else:
+        return False, output

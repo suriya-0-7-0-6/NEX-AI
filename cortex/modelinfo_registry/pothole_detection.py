@@ -7,7 +7,7 @@ CONFIG = {
   "task_name": "pothole_detection",
   "description": "Detect potholes in images.",
   "dnnarch": "yolov5",
-  "dnnarch_repo_path": None,
+  "dnnarch_repo_path": os.path.join(BaseConfigurations.MODEL_ARCHS_DIR, 'yolov5'),
   "weights_path": os.path.join(BaseConfigurations.WEIGHTS_DIR, 'yolov5_pothole.pt'),
   "input_size": [640, 640],
   "classes": [
