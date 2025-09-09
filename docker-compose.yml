@@ -32,12 +32,21 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     depends_on:
-      - flask_app
       - redis
-    restart: always
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     volumes:
       - .:/app
-  
+    restart: always
+
+
 volumes:
   redis_data:
