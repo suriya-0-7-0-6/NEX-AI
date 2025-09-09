@@ -26,7 +26,7 @@ def prepare_input(file_bytes, input_size, device='cpu'):
     img_resized = img_resized.transpose((2, 0, 1))[::-1]
     img_resized = np.ascontiguousarray(img_resized)
     model_input_img = torch.from_numpy(img_resized).to(device).float() / 255.0
-    return model_input_img.unsqueeze(0), original_shape
+    return img, model_input_img.unsqueeze(0), original_shape
 
 def draw_detections(img, detections, classes, conf_thresh):
     drwn_img = Image.fromarray(img)
@@ -54,18 +54,17 @@ def perform_detection(model, img_tensor, conf_thresh, nms_thresh):
 def parse_detections(detections, modelinfo, img_tensor, original_shape, conf_thresh):
     from utils.general import scale_boxes
     output = []
-    if detections is not None and len(detections):
-        detections[:, :4] = scale_boxes(img_tensor.shape[2:], detections[:, :4], original_shape).round()
-        for box in detections:
-            x1, y1, x2, y2, conf, cls_id = box
-            if conf < conf_thresh:
-                continue
-            label = modelinfo['classes'][int(cls_id)]
-            output.append({
-                'bbox': [int(x1), int(y1), int(x2), int(y2)],
-                'confidence': float(conf),
-                'class': label
-            })
+    detections[:, :4] = scale_boxes(img_tensor.shape[2:], detections[:, :4], original_shape).round()
+    for box in detections:
+        x1, y1, x2, y2, conf, cls_id = box
+        if conf < conf_thresh:
+            continue
+        label = modelinfo['classes'][int(cls_id)]
+        output.append({
+            'bbox': [int(x1), int(y1), int(x2), int(y2)],
+            'confidence': float(conf),
+            'class': label
+        })
     return output
 
 def detect_using_yolov5(model, img_byts_file, modelinfo, device):
@@ -73,10 +72,10 @@ def detect_using_yolov5(model, img_byts_file, modelinfo, device):
     nms_thresh = modelinfo.get('nms_threshold', 0.45)
     input_size = modelinfo.get('input_size', 640)
 
-    img_tensor, original_shape = prepare_input(img_byts_file, input_size, device)
+    img_file, img_tensor, original_shape = prepare_input(img_byts_file, input_size, device)
     detections = perform_detection(model, img_tensor, conf_thresh, nms_thresh)
 
-    if detections is not None and len(detections):
+    if detections is not None and len(detections) > 0:
         output = parse_detections(detections, modelinfo, img_tensor, original_shape, conf_thresh)
         drwn_img = draw_detections(img_file, detections, modelinfo['classes'], conf_thresh)
     else:
@@ -102,7 +101,7 @@ def check_if_any_detection_present(model, img_byts_file, modelinfo, device):
     img_tensor, original_shape = prepare_input(img_byts_file, input_size, device)
     detections = perform_detection(model, img_tensor, conf_thresh, nms_thresh)
 
-    if detections is not None and len(detections) >= 1:
+    if detections is not None and len(detections) > 0:
         return True
     else:
         return False

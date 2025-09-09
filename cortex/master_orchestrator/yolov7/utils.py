@@ -18,14 +18,15 @@ def convert_img_file_to_numpy_array(file_bytes):
     img = np.array(cv2_img_rgb)
     return img
 
-def prepare_input(img, input_size, device='cpu'):
-    print(f"[YOLOv7 Bridge] Preparing input image with size: {input_size}")
+def prepare_input(file_bytes, input_size, device='cpu'):
+    img = convert_img_file_to_numpy_array(file_bytes)
+    original_shape = img.shape[:2]
     model_input_img = transforms.Compose([
         transforms.ToPILImage(),
         transforms.Resize((input_size[0], input_size[1])),
         transforms.ToTensor(),
     ])(img).unsqueeze(0).to(device).float()
-    return model_input_img
+    return img, model_input_img, original_shape
 
 def rescale_bounding_boxes(old_size, new_size, boxes):
   old_height, old_width = old_size
@@ -42,7 +43,7 @@ def rescale_bounding_boxes(old_size, new_size, boxes):
 def draw_detections(img, detections, classes, conf_thresh):
     drwn_img = Image.fromarray(img)
     draw = ImageDraw.Draw(drwn_img)
-    for det in detections[0]:
+    for det in detections:
         x1, y1, x2, y2, conf, cls = det.tolist()
         if conf > conf_thresh:
             draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
@@ -54,28 +55,19 @@ def load_model(weights, map_location='cpu'):
     from models.experimental import attempt_custom_load
     return attempt_custom_load(weights=weights, map_location=map_location)
 
-def detect_using_yolov7(model, img_byts_file, modelinfo, device='cpu'):
+def perform_detection(model, img_tensor, conf_thresh, nms_thresh):
     from utils.general import non_max_suppression
-    print(f"[YOLOv7 Bridge] Running inference")
-    conf_thresh = modelinfo.get('confidence_threshold', 0.5)
-    nms_thresh = modelinfo.get('nms_threshold', 0.45)
-    input_size = modelinfo.get('input_size', 640)
-
-    img_file = convert_img_file_to_numpy_array(img_byts_file)
-
-    model_input_img = prepare_input(img_file, input_size, device)
-
     with torch.no_grad():
-        detections = model(model_input_img)[0]
-        detections = non_max_suppression(detections, conf_thresh, nms_thresh)
+        detections = model(img_tensor)[0]
+        detections = non_max_suppression(detections, conf_thresh, nms_thresh)[0]
+    return detections
 
-    if detections[0] is not None:
-        detections[0][:, :4] = rescale_bounding_boxes((model_input_img.shape[2],model_input_img.shape[3]), (img_file.shape[0], img_file.shape[1]), detections[0][:, :4])
-
+def parse_detections(detections, modelinfo, img_tensor, original_shape, conf_thresh):
     output = []
-    for box in detections[0] if detections is not None else []:
+    detections[:, :4] = rescale_bounding_boxes((img_tensor.shape[2],img_tensor.shape[3]), original_shape, detections[:, :4])
+    for box in detections if detections is not None else []:
         x1, y1, x2, y2, conf, cls_id = box
-        if conf < modelinfo.get("confidence_threshold", 0.25):
+        if conf < conf_thresh:
             continue
         label = modelinfo['classes'][int(cls_id)]
         output.append({
@@ -83,10 +75,24 @@ def detect_using_yolov7(model, img_byts_file, modelinfo, device='cpu'):
             'confidence': float(conf),
             'class': label
         })
-    
-    drwn_img = draw_detections(img_file, detections, modelinfo['classes'], conf_thresh)
-    result_img_name = f"{modelinfo['id']}_result.png"
+    return output
 
+def detect_using_yolov7(model, img_byts_file, modelinfo, device='cpu'):
+    print(f"[YOLOv7 Bridge] Running inference")
+    conf_thresh = modelinfo.get('confidence_threshold', 0.5)
+    nms_thresh = modelinfo.get('nms_threshold', 0.45)
+    input_size = modelinfo.get('input_size', 640)
+
+    img_file, img_tensor, original_shape = prepare_input(img_byts_file, input_size, device)
+    detections = perform_detection(model, img_tensor, conf_thresh, nms_thresh)
+
+    if detections is not None and len(detections) > 0:
+        output = parse_detections(detections, modelinfo, img_tensor, original_shape, conf_thresh)
+        drwn_img = draw_detections(img_file, detections, modelinfo['classes'], conf_thresh)
+    else:
+        drwn_img = Image.fromarray(img_file)
+   
+    result_img_name = f"{modelinfo['id']}_result.png"
     result_img_file_path = os.path.join(current_app.config['RESULTS_DIR'], result_img_name)
     drwn_img.save(result_img_file_path)
 
@@ -95,5 +101,4 @@ def detect_using_yolov7(model, img_byts_file, modelinfo, device='cpu'):
         'result',
         {'result_img_file_path': result_img_file_path, 'result_url': result_url, 'detections': output}
     )
-
     return result_img_file_path
