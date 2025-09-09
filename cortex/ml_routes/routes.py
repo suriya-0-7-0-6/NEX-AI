@@ -39,7 +39,7 @@ def ai_inference():
 
             if not upload_image_bytes_file:
                 return {'error': 'No file uploaded'}, 400
-            
+
             if not problem_id:
                 return {'error': 'Problem ID is required'}, 400
 
@@ -85,21 +85,15 @@ def has_detection():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     yolov5_tasks.set_active_arch(modelinfo['dnnarch'])
     map_location = torch.device("cpu")
-    model_loaded_again = False
     
     if yolov5_tasks._yolov5_model is None:
-        model_loaded_again = True
         yolov5_tasks._yolov5_model = yolov5_tasks.load_model(
             weights=modelinfo['weights_path'], 
             map_location=map_location
         )
 
-    any_detections, detections = check_if_any_detection_present(
+    any_detections = check_if_any_detection_present(
         yolov5_tasks._yolov5_model, file.read(), modelinfo, map_location
     )
 
-    return {
-        "has_detection": any_detections,
-        "detections": detections,
-        "model_loaded_again": model_loaded_again
-    }, 200
+    return {"has_detection": any_detections}, 200

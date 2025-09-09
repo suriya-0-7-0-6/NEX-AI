@@ -15,7 +15,7 @@ CONFIG = {
     "big_pothole",
     "water_pothole"
   ],
-  "confidence_threshold": 0.5,
+  "confidence_threshold": 0.1,
   "nms_threshold": 0.45
 }
 
