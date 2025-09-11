@@ -98,7 +98,7 @@ def check_if_any_detection_present(model, img_byts_file, modelinfo, device):
     nms_thresh = modelinfo.get('nms_threshold', 0.45)
     input_size = modelinfo.get('input_size', 640)
 
-    img_tensor, original_shape = prepare_input(img_byts_file, input_size, device)
+    _, img_tensor, _ = prepare_input(img_byts_file, input_size, device)
     detections = perform_detection(model, img_tensor, conf_thresh, nms_thresh)
 
     if detections is not None and len(detections) > 0:

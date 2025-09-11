@@ -1,7 +1,7 @@
 from flask import Blueprint, request, current_app, render_template
 import importlib
 
-from cortex.master_orchestrator import fetch_all_problem_ids, fetch_configs
+from cortex.master_orchestrator import fetch_all_problem_ids, fetch_configs, fetch_all_model_archs
 from cortex.forms import AiInferenceForm
 
 ml_api = Blueprint('ml_routes', __name__)
@@ -30,6 +30,7 @@ def get_problem_config(problem_id):
 def ai_inference():
     AIForm = AiInferenceForm()
     AIForm.problem_id.choices = fetch_all_problem_ids()
+    AIForm.models_list.choices = fetch_all_model_archs()
 
     if request.method == 'POST':
         if AIForm.validate_on_submit():

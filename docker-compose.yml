@@ -1,6 +1,8 @@
 services:
   flask_app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile_cc_6_1_cuda_12_1
     image: flask_app:latest
     command: python start_app.py
     environment:

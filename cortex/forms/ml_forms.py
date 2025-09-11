@@ -13,6 +13,22 @@ class AiInferenceForm(FlaskForm):
         validators=[DataRequired(message='Please select a problem ID')]
     )
 
+    mode = SelectField(
+        'Mode',
+        choices=[('train', 'train'), ('infer', 'infer')],
+        coerce=str,
+        render_kw={'class': 'form-select', 'aria-label': 'Default select example'},
+        validators=[DataRequired(message='Please select a mode')]
+    )
+
+    models_list = SelectField(
+        'Models List',
+        choices=[],
+        coerce=str,
+        render_kw={'class': 'form-select', 'aria-label': 'Default select example'},
+        validators=[DataRequired(message='Please select a model')]
+    )
+
     upload_image = FileField(
         'Upload File',
         validators=[

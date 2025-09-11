@@ -25,3 +25,9 @@ def fetch_configs(problem_id):
         print(f"Error importing {module_name}: {e}")
 
     return problem_configurations.CONFIG if hasattr(problem_configurations, 'CONFIG') else None
+
+
+def fetch_all_model_archs():
+    from grey_matter.model_archs.List_of_model_archs import MODEL_ARCHS_LIST
+    print(MODEL_ARCHS_LIST)
+    return MODEL_ARCHS_LIST
