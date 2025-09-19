@@ -3,6 +3,7 @@ from cortex.extensions import socketio
 from PIL import Image, ImageDraw, ImageFont
 from torchvision import transforms
 import numpy as np
+import time
 import torch
 import cv2
 import sys
@@ -86,19 +87,20 @@ def detect_using_yolov7(model, img_byts_file, modelinfo, device='cpu'):
     img_file, img_tensor, original_shape = prepare_input(img_byts_file, input_size, device)
     detections = perform_detection(model, img_tensor, conf_thresh, nms_thresh)
 
+    output = []
     if detections is not None and len(detections) > 0:
         output = parse_detections(detections, modelinfo, img_tensor, original_shape, conf_thresh)
         drwn_img = draw_detections(img_file, detections, modelinfo['classes'], conf_thresh)
     else:
         drwn_img = Image.fromarray(img_file)
    
-    result_img_name = f"{modelinfo['id']}_result.png"
-    result_img_file_path = os.path.join(current_app.config['RESULTS_DIR'], result_img_name)
+    result_img_name = f"{modelinfo['id']}_{modelinfo['dnnarch']}_{time.time()}.png"
+    result_img_file_path = f"{current_app.config['RESULTS_DIR']}/{result_img_name}"
     drwn_img.save(result_img_file_path)
 
     result_url = f'/uploads/{result_img_name}'
     socketio.emit(
         'result',
-        {'result_img_file_path': result_img_file_path, 'result_url': result_url, 'detections': output}
+        {'result_img_file_path': result_img_file_path, 'result_url': result_url, 'detections': output if detections is not None else []}
     )
     return result_img_file_path
