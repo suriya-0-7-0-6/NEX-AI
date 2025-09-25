@@ -12,45 +12,29 @@ socketio.on('result', data => {
     output_container.appendChild(img);
 })
 
-const mode = document.getElementById('mode');
-mode.addEventListener('change', function() {
-    const uploadInput = document.getElementsByClassName('upload-input-group')[0];
-    const problemIdInput = document.getElementsByClassName('problem-id-group')[0];
-    const modelsInput = document.getElementsByClassName('models-group')[0];
+document.addEventListener("DOMContentLoaded", function () {
+    const modeSelect = document.getElementById("mode");
+    const trainForm = document.querySelector('form[action="/ai_train"]');
+    const inferenceForm = document.querySelector('form[action="/ai_inference"]');
+    const prepareDatasetForm = document.querySelector('form[action="/ai_prepare_dataset"]');
 
-    if (this.value === 'infer') {
-        problemIdInput.classList.remove('hidden');
-        uploadInput.classList.remove('hidden');
-    } else {
-        problemIdInput.classList.add('hidden');
-        uploadInput.classList.add('hidden');
+    function toggleForms() {
+        const selectedMode = modeSelect.value;
+
+        trainForm.style.display = "none";
+        inferenceForm.style.display = "none";
+        prepareDatasetForm.style.display = "none";
+
+        if (selectedMode === "train") {
+            trainForm.style.display = "block";
+        } else if (selectedMode === "inference") {
+            inferenceForm.style.display = "block";
+        } else if (selectedMode === "prepare_dataset") {
+            prepareDatasetForm.style.display = "block";
+        }
     }
 
-    if (this.value === 'train') {
-        problemIdInput.classList.add('hidden');
-        modelsInput.classList.remove('hidden');
-    } else {
-        problemIdInput.classList.remove('hidden');
-        modelsInput.classList.add('hidden');
-    }
-});
+    toggleForms();
 
-const ai_form = document.querySelector('.inference-form');
-mode.addEventListener('change', function() {
-    if (this.value === 'train') {
-        ai_form.action = '/train_model';
-    } else if (this.value === 'infer') {
-        ai_form.action = '/ai_inference';
-    }
-});
-
-const aiForm = document.querySelector('.inference-form');
-
-aiForm.addEventListener('submit', function(event) {
-    event.preventDefault();  
-    const formData = new FormData(aiForm);
-    fetch(aiForm.action, {
-        method: 'POST',
-        body: formData
-    })
+    modeSelect.addEventListener("change", toggleForms);
 });

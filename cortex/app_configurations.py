@@ -16,11 +16,14 @@ class BaseConfigurations:
 
     STATIC_DIR = os.path.join(APP_DIR, 'static')
 
+    DATASETS_DIR = os.path.join(PROJECT_DIR, 'grey_matter', 'datasets')
+
     MODEL_ARCHS_DIR = os.path.join(PROJECT_DIR, 'grey_matter', 'model_archs')
 
     WEIGHTS_DIR = os.path.join(PROJECT_DIR, 'grey_matter', 'weights')
 
     LOGS_DIR = os.path.join(PROJECT_DIR, 'grey_matter', 'logs')
+    os.makedirs(LOGS_DIR, exist_ok=True)
 
     UPLOADS_DIR = os.path.join(PROJECT_DIR, 'uploads')
     os.makedirs(UPLOADS_DIR, exist_ok=True)

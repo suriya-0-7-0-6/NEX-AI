@@ -62,4 +62,52 @@ def detect_using_yolov8(model, img_byts_file, modelinfo, device):
         {'result_img_file_path': result_img_file_path, 'result_url': result_url}
     )
 
-    return 
+    return
+
+
+def train_using_yolov8(data, epochs, imgsz, batch_size, device, name):
+    print(f"[YOLOv8 Bridge] Starting training")
+    
+    socketio.emit(
+        'train_progress',
+        {
+            'progress': {
+                'status': 'started',
+                'result': {
+                    'data': data,
+                    'epochs': epochs,
+                    'imgsz': imgsz,
+                    'batch': batch_size,
+                    'device': device,
+                    'name': name
+                }
+            }
+        }
+    )
+
+    model = YOLO("yolov8n-obb.pt")
+
+    results = model.train(
+        data=data,
+        epochs=epochs,
+        imgsz=imgsz,
+        batch=batch_size,
+        device=device,
+        project=current_app.config['LOGS_DIR'],
+        name=name,
+        workers=0,
+        exist_ok=True
+    )
+
+    result_dir = os.path.join(current_app.config['LOGS_DIR'], name)
+
+    socketio.emit(
+        'train_result',
+        {
+            'progress': {
+                'status:': 'training completed successfully!', 
+                'result': result_dir
+            }
+        }
+    )
+

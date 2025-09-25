@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile_cc_6_1_cuda_12_1
     image: flask_app:latest
-    command: python start_app.py
+    command: gunicorn -w 1 -k eventlet -b 0.0.0.0:5000 start_app:app
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -19,6 +19,7 @@ services:
               capabilities: [gpu]
     volumes:
       - .:/app
+      - /home/jarvis/Desktop/projects/docker_mount_directories/uploads:/app/uploads
     restart: always
 
   redis:
@@ -47,6 +48,7 @@ services:
               capabilities: [gpu]
     volumes:
       - .:/app
+      - /home/jarvis/Desktop/projects/docker_mount_directories/uploads:/app/uploads
     restart: always
 
 

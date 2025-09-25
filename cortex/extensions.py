@@ -1,8 +1,11 @@
 from celery import Celery
 from flask_socketio import SocketIO
+import logging
 
 celery = Celery(__name__)
 socketio = SocketIO(cors_allowed_origins='*')
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def init_extensions(app):
     socketio.init_app(app, message_queue=app.config['SOCKETIO_MESSAGE_QUEUE'])

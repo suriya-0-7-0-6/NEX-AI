@@ -1,1 +1,1 @@
-from .ml_forms import AiInferenceForm
+from .ml_forms import InferenceForm, TrainForm, PrepareDatasetForm

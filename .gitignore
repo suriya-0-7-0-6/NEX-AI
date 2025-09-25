@@ -86,6 +86,8 @@ lightning_logs/
 # ------------------------------
 uploads/
 results/
+grey_matter/datasets/
+grey_matter/logs/
 temp/
 tmp/
 *.tmp

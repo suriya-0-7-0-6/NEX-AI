@@ -41,7 +41,8 @@ RUN pip install --upgrade pip setuptools wheel \
     matplotlib \
     seaborn \
     scipy \
-    ultralytics
+    ultralytics \
+    gunicorn
 
 RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
 
@@ -52,12 +53,3 @@ COPY . /app
 RUN python --version && pip --version
 
 CMD ["/bin/bash"]
-
-# RUN chmod +x /app/smart_torch_installer.py
-
-# RUN python /app/smart_torch_installer.py
-
-# RUN python -c "import torch; print('Torch:', torch.__version__, '| CUDA:', torch.version.cuda, '| GPU available:', torch.cuda.is_available())"
-
-# CMD ["python", "start_app.py"]
-# CMD ["bash", "-c", "python /app/smart_torch_installer.py && exec python start_app.py"]
