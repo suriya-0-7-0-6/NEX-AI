@@ -68,7 +68,7 @@ def parse_detections(detections, modelinfo, img_tensor, original_shape, conf_thr
         })
     return output
 
-def detect_using_yolov5(model, img_byts_file, modelinfo, device):
+def detect_using_yolov5(model, img_byts_file, modelinfo, device, output_folder_path):
     conf_thresh = modelinfo.get('confidence_threshold', 0.5)
     nms_thresh = modelinfo.get('nms_threshold', 0.45)
     input_size = modelinfo.get('input_size', 640)
@@ -84,26 +84,21 @@ def detect_using_yolov5(model, img_byts_file, modelinfo, device):
         drwn_img = Image.fromarray(img_file)
 
     result_img_name = f"{modelinfo['id']}_{modelinfo['dnnarch']}_{time.time()}.png"
-    result_img_file_path = f"{current_app.config['RESULTS_DIR']}/{result_img_name}"
+    result_img_file_path = f"{output_folder_path}/{result_img_name}"
     drwn_img.save(result_img_file_path)
 
-    result_url = f'/uploads/{result_img_name}'
+    result_url = f'/upload_single_inference_image/{result_img_name}'
+
     socketio.emit(
         'result',
-        {'result_img_file_path': result_img_file_path, 'result_url': result_url, 'detections': output if detections is not None else []}
+        {
+            'progress': {
+                'status:': 'Inference completed successfully!', 
+                'result': {
+                    'result_img_file_path': result_img_file_path, 
+                    'result_url': result_url
+                }
+            }
+        }
     )
-    return result_img_file_path
-
-
-def check_if_any_detection_present(model, img_byts_file, modelinfo, device):
-    conf_thresh = modelinfo.get('confidence_threshold', 0.5)
-    nms_thresh = modelinfo.get('nms_threshold', 0.45)
-    input_size = modelinfo.get('input_size', 640)
-
-    _, img_tensor, _ = prepare_input(img_byts_file, input_size, device)
-    detections = perform_detection(model, img_tensor, conf_thresh, nms_thresh)
-
-    if detections is not None and len(detections) > 0:
-        return True
-    else:
-        return False
+    return

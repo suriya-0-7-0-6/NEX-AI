@@ -1,1 +1,1 @@
-from .tasks import prepare_dataset, train, detect
+from .tasks import prepare_dataset, train, detect, bulk_inference

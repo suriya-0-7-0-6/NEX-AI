@@ -2,9 +2,9 @@ from flask import Blueprint, request, current_app, render_template, jsonify
 import importlib
 import os
 from flask import Response
-
+import time
 from cortex.master_orchestrator import fetch_all_problem_ids, fetch_configs, fetch_all_model_archs
-from cortex.forms import InferenceForm, TrainForm, PrepareDatasetForm
+from cortex.forms import InferenceForm, TrainForm, PrepareDatasetForm, BulkInferenceForm
 from cortex.extensions import logger
 
 
@@ -41,6 +41,9 @@ def prepare_dataset():
     inference_form = InferenceForm()
     inference_form.problem_id.choices = fetch_all_problem_ids()
 
+    bulk_inference_form = BulkInferenceForm()
+    bulk_inference_form.problem_id.choices = fetch_all_problem_ids()    
+
     if request.method == 'POST':
         if prepare_dataset_form.validate_on_submit():
             info = "Form submitted successfully"
@@ -63,17 +66,16 @@ def prepare_dataset():
             try:
                 tasks_module = importlib.import_module(f"cortex.master_orchestrator.{dnnarch}.tasks")
                 prepare_dataset_task = getattr(tasks_module, 'prepare_dataset')
+                output_folder_path = os.path.join(current_app.config['DATASETS_DIR'], dnnarch, f"prepare_dataset_{int(time.time())}")
             except (ImportError, AttributeError) as e:
                 return {'error': f"Failed to load prepare_dataset task: {e}"}, 500
-            
-            output_folder = os.path.join(current_app.config['DATASETS_DIR'] + "/" + dnnarch)
-            os.makedirs(output_folder, exist_ok=True)
 
-            output = prepare_dataset_task.apply_async(args=[input_images_folder_path, input_annotations_folder_path, output_folder, 0])
+            output = prepare_dataset_task.apply_async(args=[input_images_folder_path, input_annotations_folder_path, output_folder_path, 0])
 
             return render_template(
                 'ai_pages/ai_inference.html',
                 inference_form=inference_form,
+                bulk_inference_form=bulk_inference_form,
                 train_form=train_form,
                 prepare_dataset_form=prepare_dataset_form,
             ), 200
@@ -81,6 +83,7 @@ def prepare_dataset():
     return render_template(
         'ai_pages/ai_inference.html',
         inference_form=inference_form,
+        bulk_inference_form=bulk_inference_form,
         train_form=train_form,
         prepare_dataset_form=prepare_dataset_form,
     ), 200
@@ -97,6 +100,9 @@ def ai_inference():
 
     inference_form = InferenceForm()
     inference_form.problem_id.choices = fetch_all_problem_ids()
+
+    bulk_inference_form = BulkInferenceForm()
+    bulk_inference_form.problem_id.choices = fetch_all_problem_ids() 
 
     if request.method == 'POST':
         if inference_form.validate_on_submit():
@@ -119,14 +125,16 @@ def ai_inference():
                 dnnarch = modelinfo['dnnarch']
                 tasks_module = importlib.import_module(f"cortex.master_orchestrator.{dnnarch}.tasks")
                 detect_task = getattr(tasks_module, 'detect')
+                output_folder_path = os.path.join(current_app.config['LOGS_DIR'], "single_image_inferences")
             except (ImportError, AttributeError) as e:
                 return {'error': f"Failed to load detect task: {e}"}, 500
 
-            detect_task.apply_async(args=[upload_image_bytes_file, modelinfo])
+            detect_task.apply_async(args=[upload_image_bytes_file, modelinfo, output_folder_path])
 
             return render_template(
                 'ai_pages/ai_inference.html',
                 inference_form=inference_form,
+                bulk_inference_form=bulk_inference_form,
                 train_form=train_form,
                 prepare_dataset_form=prepare_dataset_form,
             ), 200
@@ -134,10 +142,12 @@ def ai_inference():
     return render_template(
         'ai_pages/ai_inference.html',
         inference_form=inference_form,
+        bulk_inference_form=bulk_inference_form,
         train_form=train_form,
         prepare_dataset_form=prepare_dataset_form,
     ), 200
     
+
 
 @ml_api.route('/ai_train', methods=['GET', 'POST'])
 def ai_train():
@@ -149,6 +159,9 @@ def ai_train():
 
     inference_form = InferenceForm()
     inference_form.problem_id.choices = fetch_all_problem_ids()
+
+    bulk_inference_form = BulkInferenceForm()
+    bulk_inference_form.problem_id.choices = fetch_all_problem_ids()
 
     logger.info(f"Train form validation status: {train_form.validate_on_submit()}")
     logger.info(f"Train form errors: {train_form.errors}")
@@ -174,16 +187,18 @@ def ai_train():
             try:
                 tasks_module = importlib.import_module(f"cortex.master_orchestrator.{dnnarch}.tasks")
                 train_task = getattr(tasks_module, 'train')
+                output_folder_path = os.path.join(current_app.config['LOGS_DIR'], "train_results")
             except (ImportError, AttributeError) as e:
                 return {'error': f"Failed to load train task: {e}"}, 500
 
             output = train_task.apply_async(args=[
-                dataset_yaml_path, epochs, imgsz, batch_size, "cuda", experiment_name
+                dataset_yaml_path, epochs, imgsz, batch_size, experiment_name, output_folder_path
             ])
 
             return render_template(
                 'ai_pages/ai_inference.html',
                 inference_form=inference_form,
+                bulk_inference_form=bulk_inference_form,
                 train_form=train_form,
                 prepare_dataset_form=prepare_dataset_form,
             ), 200
@@ -191,125 +206,65 @@ def ai_train():
     return render_template(
         'ai_pages/ai_inference.html',
         inference_form=inference_form,
+        bulk_inference_form=bulk_inference_form,
         train_form=train_form,
         prepare_dataset_form=prepare_dataset_form,
     ), 200
 
 
 
-import cortex.master_orchestrator.yolov5.tasks as yolov5_tasks
-from cortex.master_orchestrator.yolov5.utils import check_if_any_detection_present
+@ml_api.route('/predict', methods=['GET', 'POST'])
+def predict():
+    prepare_dataset_form = PrepareDatasetForm()
+    prepare_dataset_form.models_list.choices = fetch_all_model_archs()
 
-@ml_api.route('/has_detection', methods=['POST'])
-def has_detection():
-    import torch
-    import os
-    problem_id = request.form.get("problem_id")
-    file = request.files.get("image")
+    train_form = TrainForm()
+    train_form.models_list.choices = fetch_all_model_archs()
 
-    if not problem_id:
-        return {"error": "Problem ID is required"}, 400
-    if not file:
-        return {"error": "No image uploaded"}, 400  
+    inference_form = InferenceForm()
+    inference_form.problem_id.choices = fetch_all_problem_ids()
 
-    modelinfo = fetch_configs(problem_id)
-    if not modelinfo:
-        return {"error": "Model configuration not found"}, 404
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    yolov5_tasks.set_active_arch(modelinfo['dnnarch'])
-    map_location = torch.device("cpu")
+    bulk_inference_form = BulkInferenceForm()
+    bulk_inference_form.problem_id.choices = fetch_all_problem_ids()
     
-    if yolov5_tasks._yolov5_model is None:
-        yolov5_tasks._yolov5_model = yolov5_tasks.load_model(
-            weights=modelinfo['weights_path'], 
-            map_location=map_location
-        )
+    if request.method == 'POST':
+        if bulk_inference_form.validate_on_submit:
+            problem_id = bulk_inference_form.problem_id.data
+            input_images_folder_path = bulk_inference_form.input_images_folder_path.data   
 
-    any_detections = check_if_any_detection_present(
-        yolov5_tasks._yolov5_model, file.read(), modelinfo, map_location
-    )
+            modelinfo = fetch_configs(problem_id)
 
-    return {"has_detection": any_detections}, 200
+            if not problem_id:
+                return {'error': 'Problem ID is required'}, 400
 
+            if not input_images_folder_path or not problem_id:
+                return {"error": "Missing folder_path or problem_id"}, 400
 
-@ml_api.route('/get_detections', methods=['POST'])
-def get_detections():
-    import torch
-    import numpy as np
-    import cv2
-    import os
-    from flask import jsonify
-    from cortex.master_orchestrator.yolov8.utils import load_model
-    from werkzeug.utils import secure_filename
+            if not os.path.isdir(input_images_folder_path):
+                return {"error": f"Folder does not exist: {input_images_folder_path}"}, 400
 
-    file = request.files.get("image")
-    problem_id = request.form.get("problem_id")
+            try:
+                dnnarch = modelinfo['dnnarch']
+                tasks_module = importlib.import_module(f"cortex.master_orchestrator.{dnnarch}.tasks")
+                bulk_inferencet_task = getattr(tasks_module, 'bulk_inference')
+                output_folder_path = os.path.join(current_app.config['LOGS_DIR'], "bulk_inferences", f"bulk_inference_{int(time.time())}")
+            except (ImportError, AttributeError) as e:
+                return {'error': f"Failed to load bulk_inference task: {e}"}, 500
 
-    if not file or not problem_id:
-        return {"error": "Missing image or problem_id"}, 400
+            output = bulk_inferencet_task.apply_async(args=[input_images_folder_path, output_folder_path, modelinfo])
 
-    modelinfo = fetch_configs(problem_id)
-    if not modelinfo:
-        return {"error": "Model configuration not found"}, 404
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = load_model(weights=modelinfo["weights_path"], map_location=device)
-
-    file_bytes = file.read()
-    np_img = np.frombuffer(file_bytes, np.uint8)
-    img = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
-    if img is None:
-        return {"error": "Invalid image file"}, 400
-
-    # Run inference
-    results = model.predict(
-        source=img,
-        imgsz=modelinfo.get("input_size", 640),
-        conf=modelinfo.get("confidence_threshold", 0.25),
-        save=False,
-        device=device
-    )
-
-    filename = secure_filename(file.filename)
-    output_json = {
-        filename: {
-            "filename": filename,
-            "size": "-1",
-            "regions": [],
-            "file_attributes": {}
-        }
-    }
-
-    if results and hasattr(results[0], 'obb') and results[0].obb is not None:
-        obb_data = results[0].obb
-        xyxyxyxy = obb_data.xyxyxyxy.cpu().numpy()
-        confs = obb_data.conf.cpu().numpy()
-        clss = obb_data.cls.cpu().numpy()
-        class_names = results[0].names
-
-        for i, pts in enumerate(xyxyxyxy):
-            # Ensure we work with flat 8-length arrays
-            pts = np.array(pts).flatten()
-            if pts.shape[0] != 8:
-                continue  # skip invalid ones
-
-            all_points_x = [int(round(pts[j])) for j in range(0, 8, 2)]
-            all_points_y = [int(round(pts[j])) for j in range(1, 8, 2)]
-
-            class_id = int(clss[i])
-            label = class_names[class_id]
-
-            region = {
-                "shape_attributes": {
-                    "name": "polygon",
-                    "all_points_x": all_points_x,
-                    "all_points_y": all_points_y
-                },
-                "region_attributes": {
-                    "Label": label
-                }
-            }
-            output_json[filename]["regions"].append(region)
-
-    return jsonify(output_json), 200
+            return render_template(
+                'ai_pages/ai_inference.html',
+                inference_form=inference_form,
+                bulk_inference_form=bulk_inference_form,
+                train_form=train_form,
+                prepare_dataset_form=prepare_dataset_form,
+            ), 200
+        
+    return render_template(
+        'ai_pages/ai_inference.html',
+        inference_form=inference_form,
+        bulk_inference_form=bulk_inference_form,
+        train_form=train_form,
+        prepare_dataset_form=prepare_dataset_form,
+    ), 200

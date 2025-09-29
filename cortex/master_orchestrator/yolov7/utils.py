@@ -78,7 +78,7 @@ def parse_detections(detections, modelinfo, img_tensor, original_shape, conf_thr
         })
     return output
 
-def detect_using_yolov7(model, img_byts_file, modelinfo, device='cpu'):
+def detect_using_yolov7(model, img_byts_file, modelinfo, device, output_folder_path):
     print(f"[YOLOv7 Bridge] Running inference")
     conf_thresh = modelinfo.get('confidence_threshold', 0.5)
     nms_thresh = modelinfo.get('nms_threshold', 0.45)
@@ -95,12 +95,21 @@ def detect_using_yolov7(model, img_byts_file, modelinfo, device='cpu'):
         drwn_img = Image.fromarray(img_file)
    
     result_img_name = f"{modelinfo['id']}_{modelinfo['dnnarch']}_{time.time()}.png"
-    result_img_file_path = f"{current_app.config['RESULTS_DIR']}/{result_img_name}"
+    result_img_file_path = f"{output_folder_path}/{result_img_name}"
     drwn_img.save(result_img_file_path)
 
-    result_url = f'/uploads/{result_img_name}'
+    result_url = f'/upload_single_inference_image/{result_img_name}'
+    
     socketio.emit(
         'result',
-        {'result_img_file_path': result_img_file_path, 'result_url': result_url, 'detections': output if detections is not None else []}
+        {
+            'progress': {
+                'status:': 'Inference completed successfully!', 
+                'result': {
+                    'result_img_file_path': result_img_file_path, 
+                    'result_url': result_url
+                }
+            }
+        }
     )
-    return result_img_file_path
+    return

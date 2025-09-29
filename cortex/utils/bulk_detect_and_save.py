@@ -48,7 +48,7 @@ def main(image_dir, output_dir, problem_id, endpoint_url):
 
 if __name__ == "__main__":
    
-    image_dir = "grey_matter/datasets/yolov8/images/test"
+    image_dir = "/home/jarvis/Desktop/projects/NEX-AI/grey_matter/datasets/yolov8/images/test"
     output_dir = "/home/jarvis/Desktop/projects/stash/output"
     problem_id = "sar_ship_detection"
     url = "http://localhost:5000/get_detections"

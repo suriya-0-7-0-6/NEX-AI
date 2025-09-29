@@ -19,7 +19,9 @@ services:
               capabilities: [gpu]
     volumes:
       - .:/app
-      - /home/jarvis/Desktop/projects/docker_mount_directories/uploads:/app/uploads
+      - /home/jarvis/Desktop/projects/docker_mount_directories:/app/mounts
+
+     
     restart: always
 
   redis:
@@ -48,7 +50,7 @@ services:
               capabilities: [gpu]
     volumes:
       - .:/app
-      - /home/jarvis/Desktop/projects/docker_mount_directories/uploads:/app/uploads
+      - /home/jarvis/Desktop/projects/docker_mount_directories:/app/mounts
     restart: always
 
 

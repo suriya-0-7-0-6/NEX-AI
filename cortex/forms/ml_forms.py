@@ -22,6 +22,19 @@ class InferenceForm(FlaskForm):
     )
     submit = SubmitField('Predict')
 
+class BulkInferenceForm(FlaskForm):
+    problem_id = SelectField(
+        'Problem ID',
+        choices=[],
+        coerce=str,
+        validators=[DataRequired(message='Please select a problem ID')]
+    )
+    input_images_folder_path = StringField(
+        'Input Images Folder Path',
+        validators=[DataRequired(message='Please enter images folder path')]
+    )
+    submit = SubmitField('Predict')
+
 
 class TrainForm(FlaskForm):
     models_list = SelectField(

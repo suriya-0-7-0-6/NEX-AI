@@ -29,12 +29,10 @@ def set_active_arch(arch_name):
 
 
 @celery.task(bind=True)
-def detect(self, img_byts_file, modelinfo):
+def detect(self, img_byts_file, modelinfo, output_folder_path):
+    map_location = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     global _yolov5_model
     set_active_arch(modelinfo['dnnarch'])
-    map_location = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"map_location: {map_location}")
-    # map_location = torch.device("cpu")
     if _yolov5_model is None:
         _yolov5_model = load_model(weights=modelinfo['weights_path'], map_location=map_location)
-    return detect_using_yolov5(_yolov5_model, img_byts_file, modelinfo, map_location)
+    return detect_using_yolov5(_yolov5_model, img_byts_file, modelinfo, map_location, output_folder_path)

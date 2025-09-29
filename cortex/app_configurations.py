@@ -15,21 +15,19 @@ class BaseConfigurations:
     TEMPLATES_DIR = os.path.join(APP_DIR, 'templates')
 
     STATIC_DIR = os.path.join(APP_DIR, 'static')
-
-    DATASETS_DIR = os.path.join(PROJECT_DIR, 'grey_matter', 'datasets')
-
+    
     MODEL_ARCHS_DIR = os.path.join(PROJECT_DIR, 'grey_matter', 'model_archs')
 
     WEIGHTS_DIR = os.path.join(PROJECT_DIR, 'grey_matter', 'weights')
 
-    LOGS_DIR = os.path.join(PROJECT_DIR, 'grey_matter', 'logs')
-    os.makedirs(LOGS_DIR, exist_ok=True)
-
-    UPLOADS_DIR = os.path.join(PROJECT_DIR, 'uploads')
+    UPLOADS_DIR = os.path.join(PROJECT_DIR, 'mounts', 'uploads')
     os.makedirs(UPLOADS_DIR, exist_ok=True)
 
-    RESULTS_DIR = os.path.join(PROJECT_DIR, 'results')
-    os.makedirs(RESULTS_DIR, exist_ok=True)
+    DATASETS_DIR = os.path.join(PROJECT_DIR, 'mounts', 'datasets')
+    os.makedirs(DATASETS_DIR, exist_ok=True)
+
+    LOGS_DIR = os.path.join(PROJECT_DIR, 'mounts', 'logs')
+    os.makedirs(LOGS_DIR, exist_ok=True)
 
     if os.getenv("LOCAL_DEV", "false").lower() == "true":
         REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
