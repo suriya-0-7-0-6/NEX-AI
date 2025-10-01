@@ -30,6 +30,7 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 \
 RUN pip install --upgrade pip setuptools wheel \
     && pip install --no-cache-dir\
     flask \
+    flask_cors \
     flask_socketio \
     flask_wtf \
     eventlet \

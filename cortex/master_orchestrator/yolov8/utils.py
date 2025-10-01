@@ -66,7 +66,6 @@ def detect_using_yolov8(model, img_byts_file, modelinfo, device, output_folder_p
             'progress': {
                 'status': 'Inference completed successfully!', 
                 'result': {
-                    'result_img_file_path': result_img_file_path, 
                     'result_url': result_url
                 }
             }

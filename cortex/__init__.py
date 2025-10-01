@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from cortex.app_configurations import BaseConfigurations, ProductionConfigurations
 from cortex.extensions import init_extensions
 from cortex.ml_routes import ml_api
@@ -10,6 +11,7 @@ def create_app():
         template_folder = BaseConfigurations.TEMPLATES_DIR,
         static_folder = BaseConfigurations.STATIC_DIR
     )
+    CORS(app, resources={r"/*": {"origins": "*"}})
     app.config.from_object(BaseConfigurations)
     app.register_blueprint(ml_api)
     app.register_blueprint(files_api)
