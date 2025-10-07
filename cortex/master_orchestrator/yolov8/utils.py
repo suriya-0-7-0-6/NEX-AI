@@ -73,95 +73,6 @@ def detect_using_yolov8(model, img_byts_file, modelinfo, device, output_folder_p
     )
     return
 
-
-
-def bulk_detect_using_yolov8(model, image_folder, output_folder, modelinfo, map_location):
-    os.makedirs(output_folder, exist_ok=True)
-    
-    image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tiff'}
-    image_files = [f for f in os.listdir(image_folder) if os.path.splitext(f)[1].lower() in image_extensions]
-
-    detection_results = {}
-
-    for image_file in image_files:
-        file_path = os.path.join(image_folder, image_file)
-        with open(file_path, "rb") as f:
-            file_bytes = f.read()
-
-        np_img = np.frombuffer(file_bytes, np.uint8)
-        img = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
-        if img is None:
-            continue  
-
-        results = model.predict(
-            source=img,
-            imgsz=modelinfo.get("input_size", 640),
-            conf=modelinfo.get("confidence_threshold", 0.25),
-            save=False,
-            device=map_location
-        )
-
-        filename = secure_filename(image_file)
-        output_json = {
-            filename: {
-                "filename": filename,
-                "size": "-1",
-                "regions": [],
-                "file_attributes": {}
-            }
-        }
-
-        if results and hasattr(results[0], 'obb') and results[0].obb is not None:
-            obb_data = results[0].obb
-            xyxyxyxy = obb_data.xyxyxyxy.cpu().numpy()
-            confs = obb_data.conf.cpu().numpy()
-            clss = obb_data.cls.cpu().numpy()
-            class_names = results[0].names
-
-            for i, pts in enumerate(xyxyxyxy):
-                pts = np.array(pts).flatten()
-                if pts.shape[0] != 8:
-                    continue
-
-                all_points_x = [int(round(pts[j])) for j in range(0, 8, 2)]
-                all_points_y = [int(round(pts[j])) for j in range(1, 8, 2)]
-
-                class_id = int(clss[i])
-                label = class_names[class_id]
-
-                region = {
-                    "shape_attributes": {
-                        "name": "polygon",
-                        "all_points_x": all_points_x,
-                        "all_points_y": all_points_y
-                    },
-                    "region_attributes": {
-                        "Label": label
-                    }
-                }
-                output_json[filename]["regions"].append(region)
-
-        output_filename = os.path.splitext(filename)[0] + ".json"
-        output_path = os.path.join(output_folder, output_filename)
-        with open(output_path, "w") as f:
-            json.dump(output_json, f, indent=4)
-
-        detection_results[filename] = output_json[filename]
-
-    socketio.emit(
-        'bulk_inference_result',
-        {
-            'progress': {
-                'status': 'Bulk inference completed successfully!', 
-                'result': {
-                    'result_dir': output_folder, 
-                }
-            }
-        }
-    )
-
-
-
 def train_using_yolov8(data, epochs, imgsz, batch_size, device, name, output_folder_path):
     print(f"[YOLOv8 Bridge] Starting training")
     
@@ -212,3 +123,63 @@ def train_using_yolov8(data, epochs, imgsz, batch_size, device, name, output_fol
         }
     )
 
+def bulk_detect_using_yolov8(model, image_file, modelinfo, map_location):
+    """
+    Run YOLOv8 detection on a single uploaded image.
+    image_file: werkzeug.FileStorage (from request.files['image'])
+    Returns detection results as a dictionary.
+    """
+    # Read image bytes
+    file_bytes = image_file.read()
+    np_img = np.frombuffer(file_bytes, np.uint8)
+    img = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
+    if img is None:
+        return {"error": f"Failed to read image {image_file.filename}"}
+
+    # Run prediction
+    results = model.predict(
+        source=img,
+        imgsz=modelinfo.get("input_size", 640),
+        conf=modelinfo.get("confidence_threshold", 0.25),
+        save=False,
+        device=map_location
+    )
+
+    filename = secure_filename(image_file.filename)
+    output_json = {
+        filename: {
+            "filename": filename,
+            "size": "-1",
+            "regions": [],
+            "file_attributes": {}
+        }
+    }
+
+    if results and hasattr(results[0], "obb") and results[0].obb is not None:
+        obb_data = results[0].obb
+        xyxyxyxy = obb_data.xyxyxyxy.cpu().numpy()
+        clss = obb_data.cls.cpu().numpy()
+        class_names = results[0].names
+
+        for i, pts in enumerate(xyxyxyxy):
+            pts = np.array(pts).flatten()
+            if pts.shape[0] != 8:
+                continue
+
+            all_points_x = [int(round(pts[j])) for j in range(0, 8, 2)]
+            all_points_y = [int(round(pts[j])) for j in range(1, 8, 2)]
+
+            class_id = int(clss[i])
+            label = class_names[class_id]
+
+            region = {
+                "shape_attributes": {
+                    "name": "polygon",
+                    "all_points_x": all_points_x,
+                    "all_points_y": all_points_y
+                },
+                "region_attributes": {"Label": label}
+            }
+            output_json[filename]["regions"].append(region)
+
+    return output_json

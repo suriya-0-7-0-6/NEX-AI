@@ -29,10 +29,9 @@ def train(self, dataset_yaml_path, epochs, imgsz, batch_size, experiment_name, o
     map_location = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     return train_using_yolov8(dataset_yaml_path, epochs, imgsz, batch_size, map_location, experiment_name, output_folder_path)
 
-@celery.task(bind=True)
-def bulk_inference(self, image_folder, output_folder, modelinfo):
+def bulk_inference(image_file, modelinfo):
     map_location = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     global _yolov8_model
     if _yolov8_model is None:
         _yolov8_model = load_model(weights=modelinfo['weights_path'], map_location=map_location)
-    return bulk_detect_using_yolov8(_yolov8_model, image_folder, output_folder, modelinfo, map_location)
+    return bulk_detect_using_yolov8(_yolov8_model, image_file, modelinfo, map_location)

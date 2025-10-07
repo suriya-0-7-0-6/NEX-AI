@@ -215,56 +215,19 @@ def ai_train():
 
 @ml_api.route('/predict', methods=['GET', 'POST'])
 def predict():
-    prepare_dataset_form = PrepareDatasetForm()
-    prepare_dataset_form.models_list.choices = fetch_all_model_archs()
+    problem_id = request.form.get("problem_id")
+    image = request.files.get("image")
+     
+    if not problem_id:
+        return {'error': 'Problem ID is required'}, 400
 
-    train_form = TrainForm()
-    train_form.models_list.choices = fetch_all_model_archs()
-
-    inference_form = InferenceForm()
-    inference_form.problem_id.choices = fetch_all_problem_ids()
-
-    bulk_inference_form = BulkInferenceForm()
-    bulk_inference_form.problem_id.choices = fetch_all_problem_ids()
-    
-    if request.method == 'POST':
-        if bulk_inference_form.validate_on_submit:
-            problem_id = bulk_inference_form.problem_id.data
-            input_images_folder_path = bulk_inference_form.input_images_folder_path.data   
-
-            modelinfo = fetch_configs(problem_id)
-
-            if not problem_id:
-                return {'error': 'Problem ID is required'}, 400
-
-            if not input_images_folder_path or not problem_id:
-                return {"error": "Missing folder_path or problem_id"}, 400
-
-            if not os.path.isdir(input_images_folder_path):
-                return {"error": f"Folder does not exist: {input_images_folder_path}"}, 400
-
-            try:
-                dnnarch = modelinfo['dnnarch']
-                tasks_module = importlib.import_module(f"cortex.master_orchestrator.{dnnarch}.tasks")
-                bulk_inferencet_task = getattr(tasks_module, 'bulk_inference')
-                output_folder_path = os.path.join(current_app.config['LOGS_DIR'], "bulk_inferences", f"bulk_inference_{int(time.time())}")
-            except (ImportError, AttributeError) as e:
-                return {'error': f"Failed to load bulk_inference task: {e}"}, 500
-
-            output = bulk_inferencet_task.apply_async(args=[input_images_folder_path, output_folder_path, modelinfo])
-
-            return render_template(
-                'ai_pages/ai_inference.html',
-                inference_form=inference_form,
-                bulk_inference_form=bulk_inference_form,
-                train_form=train_form,
-                prepare_dataset_form=prepare_dataset_form,
-            ), 200
+    if not image or not problem_id:
+        return {"error": "Missing folder_path or problem_id"}, 400
         
-    return render_template(
-        'ai_pages/ai_inference.html',
-        inference_form=inference_form,
-        bulk_inference_form=bulk_inference_form,
-        train_form=train_form,
-        prepare_dataset_form=prepare_dataset_form,
-    ), 200
+    modelinfo = fetch_configs(problem_id)
+
+    dnnarch = modelinfo['dnnarch']
+    tasks_module = importlib.import_module(f"cortex.master_orchestrator.{dnnarch}.tasks")
+    bulk_inferencet_task = getattr(tasks_module, 'bulk_inference')
+    detection_results = bulk_inferencet_task(image, modelinfo)
+    return detection_results
