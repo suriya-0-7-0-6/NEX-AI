@@ -2,12 +2,14 @@ services:
   flask_app:
     build:
       context: .
-      dockerfile: Dockerfile_cc_6_1_cuda_12_1
+      dockerfile: multistage_Dockerfile_cc_6_1_cuda_12_1
     image: flask_app:latest
     command: gunicorn -w 1 -k eventlet -b 0.0.0.0:5000 start_app:app
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     ports:
       - "5000:5000"
     deploy:
@@ -19,9 +21,7 @@ services:
               capabilities: [gpu]
     volumes:
       - .:/app
-      - /home/jarvis/Desktop/projects/docker_mount_directories:/app/mounts
-
-     
+      - /home/jarvis/Desktop/projects/docker_mount_directories:/app/mounts 
     restart: always
 
   redis:

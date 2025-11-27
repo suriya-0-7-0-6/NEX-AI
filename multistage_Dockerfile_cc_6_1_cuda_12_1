@@ -1,0 +1,83 @@
+###############################
+# STAGE 1 — BUILDER
+###############################
+FROM pytorch/pytorch:2.5.1-cuda12.1-cudnn9-runtime AS builder
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    curl \
+    wget \
+    ca-certificates \
+    python3.10 \
+    python3.10-dev \
+    python3.10-distutils \
+    python3-venv \
+    libglib2.0-0 \
+    libsm6 \
+    libxrender1 \
+    libxext6 \
+    libgl1 && \
+    curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 && \
+    rm -rf /var/lib/apt/lists/*
+
+
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 \
+    && update-alternatives --set python /usr/bin/python3.10
+
+# Create builder venv
+RUN python -m venv /builder_venv
+ENV PATH="/builder_venv/bin:$PATH"
+
+# Create wheels directory
+RUN mkdir -p /wheels
+
+# Copy dependency list
+COPY fresh_requirements.txt /app/fresh_requirements.txt
+
+# Build wheels for all dependencies
+RUN pip install --upgrade pip && \
+    pip wheel --wheel-dir=/wheels \
+    -r /app/fresh_requirements.txt
+
+
+###############################
+# STAGE 2 — RUNTIME (LEAN)
+###############################
+FROM pytorch/pytorch:2.5.1-cuda12.1-cudnn9-runtime
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    ca-certificates \
+    python3.10 \
+    python3-venv \
+    libglib2.0-0 \
+    libsm6 \
+    libxrender1 \
+    libxext6 \
+    libgl1 && \
+    curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 \
+    && update-alternatives --set python /usr/bin/python3.10
+
+# Create runtime venv
+RUN python -m venv /venv
+ENV PATH="/venv/bin:$PATH"
+
+# Bring wheels from builder
+COPY --from=builder /wheels /wheels
+
+# Install from wheels only
+RUN pip install --no-index --find-links=/wheels /wheels/*.whl
+
+# Copy application files
+WORKDIR /app
+COPY . /app
+
+# Default process (can be overridden by docker-compose)
+CMD ["gunicorn", "-w", "1", "-k", "eventlet", "-b", "0.0.0.0:5000", "start_app:app"]

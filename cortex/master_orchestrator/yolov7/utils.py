@@ -3,6 +3,7 @@ from cortex.extensions import socketio
 from PIL import Image, ImageDraw, ImageFont
 from torchvision import transforms
 import numpy as np
+import subprocess
 import time
 import torch
 import cv2
@@ -52,7 +53,6 @@ def draw_detections(img, detections, classes, conf_thresh):
     return drwn_img
 
 def load_model(weights, map_location='cpu'):
-    print(f" YOLOV7: {sys.path}")
     from models.experimental import attempt_custom_load
     return attempt_custom_load(weights=weights, map_location=map_location)
 
@@ -113,3 +113,73 @@ def detect_using_yolov7(model, img_byts_file, modelinfo, device, output_folder_p
         }
     )
     return
+
+
+def train_using_yolov7(device, params):
+    epochs = params.get("epochs", 100)
+    imgsz = params.get("imgsz", 640)
+    batch_size = params.get("batch_size", 16)
+    model_cfg_yaml_path = params.get("model_cfg_yaml_path")
+    dataset_yaml_path = params.get("dataset_yaml_path")
+    experiment_name = params.get("experiment_name", f"yolo_train_{int(time.time())}")
+    output_folder_path = params.get("output_folder_path")
+    weights = params.get("weights", "yolov7.pt")
+    
+    device = 0 if device.type == "cuda" and torch.cuda.is_available() else "cpu"
+    
+    base_dir = base_dir = current_app.config['MODEL_ARCHS_DIR']
+    arch_dir = os.path.join(base_dir, params["dnnarch"])
+    script_dir = script_path = os.path.join(arch_dir, "train.py")
+
+    command = [
+        "python", script_dir,
+        "--device", str(0),
+        "--batch-size", str(batch_size),
+        "--data", str(dataset_yaml_path),
+        "--img", str(imgsz), str(imgsz),
+        "--cfg", model_cfg_yaml_path,
+        "--weights", weights,
+        "--project", output_folder_path,
+        "--name", experiment_name,
+        "--epochs", str(epochs),
+        "--exist-ok"
+    ]
+
+    print("🚀 Running YOLOv7 training subprocess:", " ".join(command))
+
+    socketio.emit("train_progress", {
+        "progress": {
+            "status": "started",
+            "result": {"cmd": " ".join(command)}
+        }
+    })
+
+    process = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True
+    )
+
+    for line in process.stdout:
+        print(line, end="")
+
+        socketio.emit("train_progress", {
+            "progress": {
+                "status": "running",
+                "log": line.strip()
+            }
+        })
+
+    process.wait()
+
+    socketio.emit("train_results", {
+        "progress": {
+            "status": "Training completed successfully!",
+            "result": {
+                "output_dir": os.path.join(output_folder_path, experiment_name)
+            }
+        }
+    })
+
+    return True

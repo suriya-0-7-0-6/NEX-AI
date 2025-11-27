@@ -73,8 +73,21 @@ def detect_using_yolov8(model, img_byts_file, modelinfo, device, output_folder_p
     )
     return
 
-def train_using_yolov8(data, epochs, imgsz, batch_size, device, name, output_folder_path):
-    print(f"[YOLOv8 Bridge] Starting training")
+def train_using_yolov8(device, params):
+    print("[YOLOv8 Bridge] Parsed parameters:", params)
+    
+    try:
+        dataset_yaml_path = params.get("dataset_yaml_path")
+        epochs = int(params.get("epochs", 50))
+        imgsz = int(params.get("imgsz", 640))
+        batch_size = int(params.get("batch_size", 8))
+        name = params.get("experiment_name", f"yolov8_training_{time.time()}")
+        output_folder_path = params.get("output_folder_path", os.path.join(current_app.config['LOGS_DIR'], "train_results"))
+    except Exception as e:
+        socketio.emit(
+        'error', {'error': e}
+        )
+        return "Failed"
     
     socketio.emit(
         'train_progress',
@@ -82,7 +95,7 @@ def train_using_yolov8(data, epochs, imgsz, batch_size, device, name, output_fol
             'progress': {
                 'status': 'started',
                 'result': {
-                    'data': data,
+                    'data': dataset_yaml_path,
                     'epochs': epochs,
                     'imgsz': imgsz,
                     'batch': batch_size,
@@ -98,7 +111,7 @@ def train_using_yolov8(data, epochs, imgsz, batch_size, device, name, output_fol
     name=f"exp_{name}_{int(time.time())}"
 
     results = model.train(
-        data=data,
+        data=dataset_yaml_path,
         epochs=epochs,
         imgsz=imgsz,
         batch=batch_size,
@@ -122,6 +135,7 @@ def train_using_yolov8(data, epochs, imgsz, batch_size, device, name, output_fol
             }
         }
     )
+
 
 def bulk_detect_using_yolov8(model, image_file, modelinfo, map_location):
     """

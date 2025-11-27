@@ -6,6 +6,7 @@ import numpy as np
 import random
 import shutil
 import yaml
+from flask import current_app
 
 
 class YOLOv8OBBProcessor:
@@ -88,9 +89,9 @@ class YOLOv8OBBProcessor:
         yaml_path = os.path.join(self.output_folder, "dataset.yaml")
         yaml_content = {
             "path": ".",
-            "train": "images/train",
-            "val": "images/val",
-            "test": "images/test",
+            "train": os.path.join(self.output_folder, "images/train"),
+            "val": os.path.join(self.output_folder, "images/val"),
+            "test": os.path.join(self.output_folder, "images/test"),
             "nc": 1,
             "names": ["ship"]
         }

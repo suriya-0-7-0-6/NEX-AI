@@ -44,7 +44,7 @@
             </div>
         </form>
 
-        <form action="/ai_train" method="POST" enctype="multipart/form-data" class="inference-form">
+        <!-- <form action="/ai_train" method="POST" enctype="multipart/form-data" class="inference-form">
             {{ train_form.hidden_tag() }}
             <div class="form-group models-group">
                 {{ train_form.models_list.label(class="form-label") }}
@@ -75,6 +75,20 @@
                 {{ train_form.experiment_name.label(class="form-label") }}
                 {{ train_form.experiment_name(class="form-input") }}
             </div>
+
+            <div class="form-group">
+                {{ train_form.submit(class="btn") }}
+            </div>
+        </form> -->
+
+        <form action="/ai_train" method="POST" enctype="multipart/form-data" class="inference-form">
+            {{ train_form.hidden_tag() }}
+            <div class="form-group models-group">
+                {{ train_form.models_list.label(class="form-label") }}
+                {{ train_form.models_list(class="form-input") }}
+            </div>
+
+            <div id="dynamic-train-params"></div>
 
             <div class="form-group">
                 {{ train_form.submit(class="btn") }}

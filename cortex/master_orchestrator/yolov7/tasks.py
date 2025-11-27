@@ -3,7 +3,7 @@ import torch
 import sys
 import os
 from cortex.extensions import celery, socketio
-from .utils import load_model, detect_using_yolov7
+from .utils import load_model, detect_using_yolov7, train_using_yolov7
 
 
 _yolov7_model = None
@@ -39,3 +39,9 @@ def detect(self, img_byts_file, modelinfo, output_folder_path):
     if _yolov7_model is None:
         _yolov7_model = load_model(weights=modelinfo['weights_path'], map_location=map_location)
     return detect_using_yolov7(_yolov7_model, img_byts_file, modelinfo, map_location, output_folder_path)
+
+@celery.task(bind=True)
+def train(self, params):
+    set_active_arch(params['dnnarch'])
+    map_location = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    return train_using_yolov7(map_location, params)
