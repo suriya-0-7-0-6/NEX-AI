@@ -86,8 +86,8 @@ lightning_logs/
 # ------------------------------
 uploads/
 results/
-grey_matter/datasets/
-grey_matter/logs/
+docker_mount_directories/
+grey_matter/
 wheels/
 temp/
 tmp/
