@@ -5,6 +5,7 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.pyc
 
 # ------------------------------
 # Environment files
@@ -35,6 +36,11 @@ dist/
 # Jupyter Notebook checkpoints
 # ------------------------------
 .ipynb_checkpoints
+
+# ------------------------------
+# Node Modules
+# ------------------------------
+node_modules/
 
 # ------------------------------
 # IDE/editor configs
@@ -88,8 +94,13 @@ uploads/
 results/
 grey_matter/datasets/
 grey_matter/logs/
-wheels/
 temp/
 tmp/
 *.tmp
+
+# ------------------------------
+# Git related
+# ------------------------------
+.git/
+
 # ------------------------------

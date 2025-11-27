@@ -21,7 +21,7 @@ services:
               capabilities: [gpu]
     volumes:
       - .:/app
-      - /home/jarvis/Desktop/projects/docker_mount_directories:/app/mounts 
+      - /home/jarvis/Desktop/projects/docker_mount_directories:/app/grey_matter 
     restart: always
 
   redis:
@@ -50,7 +50,7 @@ services:
               capabilities: [gpu]
     volumes:
       - .:/app
-      - /home/jarvis/Desktop/projects/docker_mount_directories:/app/mounts
+      - /home/jarvis/Desktop/projects/docker_mount_directories:/app/grey_matter
     restart: always
 
 
