@@ -2,7 +2,7 @@
 // Configuration
 // ============================
 // Change this once if your server IP/Port changes
-const HOST = "http://10.4.71.86:5000";
+const HOST = "http://10.4.71.24:5000";
 
 // Connect to Socket.IO server
 const socketio = io(HOST);

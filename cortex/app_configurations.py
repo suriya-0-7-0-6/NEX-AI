@@ -26,7 +26,7 @@ class BaseConfigurations:
     DATASETS_DIR = os.path.join(PROJECT_DIR, 'grey_matter', 'datasets')
     os.makedirs(DATASETS_DIR, exist_ok=True)
 
-    LOGS_DIR = os.path.join(PROJECT_DIR, 'mounts', 'logs')
+    LOGS_DIR = os.path.join(PROJECT_DIR, 'grey_matter', 'logs')
     os.makedirs(LOGS_DIR, exist_ok=True)
 
     if os.getenv("LOCAL_DEV", "false").lower() == "true":
