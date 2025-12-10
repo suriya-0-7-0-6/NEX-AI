@@ -10,9 +10,17 @@ RUN apt-get update && apt-get install -y \
     bash && \
     rm -rf /var/lib/apt/lists/*
 
+RUN useradd -ms /bin/bash appuser
+
+RUN mkdir -p /app && chown -R appuser:appuser /app
+
+USER appuser
+
 WORKDIR /app
 
-COPY . /app
+ENV PATH="/home/appuser/.local/bin:$PATH"
+
+COPY --chown=appuser:appuser . /app
 
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir --no-index --find-links=/app/wheels /app/wheels/*.whl && \

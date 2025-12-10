@@ -1,0 +1,28 @@
+.toggle-header{
+
+    background:linear-gradient(135deg,#2563eb,#1e40af);
+    color:#fff;
+
+    padding:16px 20px;
+
+    border-radius:var(--radius);
+    box-shadow:var(--shadow-soft);
+
+    font-size:18px;
+    font-weight:600;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    cursor:pointer;
+}
+
+/* Arrow animation */
+.toggle-header .arrow{
+    transition:transform .25s ease;
+}
+
+.toggle-header.closed .arrow{
+    transform:rotate(-90deg);
+}

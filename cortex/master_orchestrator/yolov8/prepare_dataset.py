@@ -7,7 +7,7 @@ import random
 import shutil
 import yaml
 from flask import current_app
-
+from cortex.extensions import socketio
 
 class YOLOv8OBBProcessor:
     def __init__(self, image_folder, json_path, output_folder, class_id=0):
@@ -84,6 +84,20 @@ class YOLOv8OBBProcessor:
                 shutil.copy(lbl_path, os.path.join(split_lbl_dir, os.path.basename(lbl_path)))
 
             print(f"[SPLIT] {split}: {len(files)} samples")
+        socketio.emit(
+            'live_logs',
+            {
+                'progress': {
+                    "level": "info",
+                    'status': f'Dataset split into train, test, val', 
+                    'logs': {
+                        'length of train set': len(splits['train']),
+                        'length of val set': len(splits['val']),
+                        'length of test set': len(splits['test'])
+                    }
+                }
+            }
+        )
 
     def save_dataset_yaml(self):
         yaml_path = os.path.join(self.output_folder, "dataset.yaml")
@@ -99,11 +113,19 @@ class YOLOv8OBBProcessor:
         with open(yaml_path, "w") as f:
             yaml.dump(yaml_content, f, default_flow_style=False)
 
-        print(f"[SAVED] {yaml_path}")
-
     def process(self):
-        print(f"[YOLOv8 Bridge] Running inference")
         print(f"[PROCESS] Loading annotations from: {self.json_path}")
+        socketio.emit(
+            'live_logs',
+            {
+                'progress': {
+                    "level": "info",
+                    'status': f'Loading annotations from: {self.json_path}', 
+                    'logs': {}
+                }
+            }
+        )
+
         with open(self.json_path, "r") as f:
             annotations = json.load(f)
 
@@ -114,12 +136,30 @@ class YOLOv8OBBProcessor:
         for img_name, ann in annotations.items():
             img_path = os.path.join(self.image_folder, img_name)
             if not os.path.exists(img_path):
-                print(f"[WARNING] Image not found: {img_path}")
+                socketio.emit(
+                    'live_logs',
+                    {
+                        'progress': {
+                            "level": "warning",
+                            'status': f'Image not found: {img_path}', 
+                            'logs': {}
+                        }
+                    }
+                )
                 continue
 
             img = cv2.imread(img_path)
             if img is None:
-                print(f"[ERROR] Could not read image: {img_path}")
+                socketio.emit(
+                    'live_logs',
+                    {
+                        'progress': {
+                            "level": "warning",
+                            'status': f'Could not read image: {img_path}', 
+                            'logs': {}
+                        }
+                    }
+                )
                 continue
 
             img_h, img_w = img.shape[:2]
@@ -135,3 +175,15 @@ class YOLOv8OBBProcessor:
 
         self.split_and_save_dataset(label_files)
         self.save_dataset_yaml()
+        socketio.emit(
+            'live_logs',
+            {
+                'progress': {
+                    "level": "info",
+                    'status': f'Dataset prepared successfully!', 
+                    'logs': {
+                        'dataset_folder_path': self.output_folder
+                    }
+                }
+            }
+        )

@@ -78,30 +78,38 @@ def parse_detections(detections, modelinfo, img_tensor, original_shape, conf_thr
         })
     return output
 
-def detect_using_yolov7(model, img_byts_file, modelinfo, device, output_folder_path):
-    print(f"[YOLOv7 Bridge] Running inference")
-    conf_thresh = modelinfo.get('confidence_threshold', 0.5)
-    nms_thresh = modelinfo.get('nms_threshold', 0.45)
-    input_size = modelinfo.get('input_size', 640)
 
-    img_file, img_tensor, original_shape = prepare_input(img_byts_file, input_size, device)
+
+def detect_using_yolov7(model, device, params):
+    print(f"[YOLOv7 Bridge] Running inference")
+    time_0  = time.time()
+    conf_thresh = params.get('modelinfo').get('confidence_threshold', 0.5)
+    nms_thresh = params.get('modelinfo').get('nms_threshold', 0.45)
+    input_size = params.get('modelinfo').get('input_size', 640)
+
+    img_file, img_tensor, original_shape = prepare_input(params['files']['file_upload'], input_size, device)
     detections = perform_detection(model, img_tensor, conf_thresh, nms_thresh)
 
     output = []
     if detections is not None and len(detections) > 0:
-        output = parse_detections(detections, modelinfo, img_tensor, original_shape, conf_thresh)
-        drwn_img = draw_detections(img_file, detections, modelinfo['classes'], conf_thresh)
+        output = parse_detections(detections, params['modelinfo'], img_tensor, original_shape, conf_thresh)
+        drwn_img = draw_detections(img_file, detections, params['modelinfo']['classes'], conf_thresh)
     else:
         drwn_img = Image.fromarray(img_file)
    
-    result_img_name = f"{modelinfo['id']}_{modelinfo['dnnarch']}_{time.time()}.png"
-    result_img_file_path = f"{output_folder_path}/{result_img_name}"
+    result_img_name = f"{params['modelinfo']['id']}_{params['modelinfo']['dnnarch']}_{time.time()}.png"
+    os.makedirs(params['output_folder_path'], exist_ok=True)
+    result_img_file_path = f"{params['output_folder_path']}/{result_img_name}"
     drwn_img.save(result_img_file_path)
 
     result_url = f'/upload_single_inference_image/{result_img_name}'
-    
+
+    time_1  = time.time()
+
+    inference_time = f"Single image inference time: {time_1 - time_0}"
+
     socketio.emit(
-        'result',
+        'single_inference_result',
         {
             'progress': {
                 'status:': 'Inference completed successfully!', 
@@ -112,7 +120,23 @@ def detect_using_yolov7(model, img_byts_file, modelinfo, device, output_folder_p
             }
         }
     )
+
+    socketio.emit(
+        'live_logs',
+        {
+            'progress': {
+                "level": "info",
+                'status': f'Inference for {result_img_name} completed successfully!', 
+                'logs': {
+                    'result_img_file_path': result_img_file_path, 
+                    'result_url': result_url,
+                    'inference_time': inference_time
+                }
+            }
+        }
+    )
     return
+
 
 
 def train_using_yolov7(device, params):

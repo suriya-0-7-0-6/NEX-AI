@@ -1,0 +1,21 @@
+/* ==============================
+   NEX-AI DASHBOARD — MASTER CSS
+============================== */
+
+/* BASE */
+@import "./base/variables.css";
+@import "./base/reset.css";
+@import "./base/typography.css";
+
+/* LAYOUT */
+@import "./layout/grid.css";
+@import "./layout/responsive.css";
+
+/* COMPONENTS */
+@import "./components/header.css";
+@import "./components/form.css";
+@import "./components/output.css";
+@import "./components/logs.css";
+
+/* UTILITIES */
+@import "./utils/helpers.css";

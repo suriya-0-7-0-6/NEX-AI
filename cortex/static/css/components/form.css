@@ -1,0 +1,81 @@
+.form-wrapper{
+
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px;
+
+    box-shadow:var(--shadow-soft);
+}
+
+/* Collapse */
+.form-wrapper:not(.open){
+    max-height:0;
+    overflow:hidden;
+    padding:0 20px;
+    border-color:transparent;
+}
+
+/* Mode Row */
+.form-group.mode{
+    display:flex;
+    gap:12px;
+    align-items:center;
+
+    border-bottom:1px solid var(--border);
+    margin-bottom:14px;
+    padding-bottom:10px;
+}
+
+.form-label{
+    font-size:14px;
+    font-weight:600;
+}
+
+/* Inputs */
+.form-input,
+.inference-form input,
+.inference-form select,
+.inference-form textarea{
+
+    width:100%;
+    padding:10px 12px;
+
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+
+    transition:border .2s ease, box-shadow .2s ease;
+}
+
+.form-input:focus,
+.inference-form input:focus,
+.inference-form select:focus,
+.inference-form textarea:focus{
+
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 2px rgba(37,99,235,.15);
+}
+
+/* Dynamic fields grid */
+#dynamic-fields{
+    display:grid;
+    gap:12px;
+}
+
+/* Submit */
+.btn{
+    width:100%;
+    margin-top:14px;
+
+    padding:12px;
+
+    background:var(--accent);
+    color:#fff;
+
+    border:none;
+    border-radius:var(--radius-sm);
+    font-weight:600;
+
+    cursor:pointer;
+}

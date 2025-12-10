@@ -12,6 +12,8 @@ import cv2
 import sys
 import os
 
+
+
 def convert_img_file_to_numpy_array(file_bytes):
     np_img = np.frombuffer(file_bytes, np.uint8)
     cv2_img_bgr = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
@@ -20,6 +22,8 @@ def convert_img_file_to_numpy_array(file_bytes):
     cv2_img_rgb = cv2.cvtColor(cv2_img_bgr, cv2.COLOR_BGR2RGB)
     img = np.array(cv2_img_rgb)
     return img
+
+
 
 def prepare_input(file_bytes, input_size, device='cpu'):
     img = convert_img_file_to_numpy_array(file_bytes)
@@ -31,9 +35,13 @@ def prepare_input(file_bytes, input_size, device='cpu'):
     ])(img).unsqueeze(0).to(device).float()
     return img, model_input_img, original_shape
 
+
+
 def load_model(weights, map_location='cpu'):
     model = YOLO(weights)
     return model
+
+
 
 def detect_using_yolov8(model, img_byts_file, modelinfo, device, output_folder_path):
     print(f"[YOLOv8 Bridge] Running inference")
@@ -73,6 +81,8 @@ def detect_using_yolov8(model, img_byts_file, modelinfo, device, output_folder_p
     )
     return
 
+
+
 def train_using_yolov8(device, params):
     print("[YOLOv8 Bridge] Parsed parameters:", params)
     
@@ -89,6 +99,8 @@ def train_using_yolov8(device, params):
         )
         return "Failed"
     
+    device = 0 if device.type == "cuda" and torch.cuda.is_available() else "cpu"
+
     socketio.emit(
         'train_progress',
         {
@@ -106,7 +118,10 @@ def train_using_yolov8(device, params):
         }
     )
 
-    model = YOLO("yolov8n-obb.pt")
+    model_weigths_path = os.path.join(current_app.config['TRAINING_FROM_SCRATCH_WEIGHTS_DIR'], 'yolov8n-obb.pt')
+    # model = YOLO("yolov8n-obb.pt")
+    model = YOLO(model_weigths_path)
+
 
     name=f"exp_{name}_{int(time.time())}"
 

@@ -5,6 +5,9 @@ from wtforms import StringField, SelectField, SubmitField, IntegerField
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms.validators import DataRequired,  NumberRange
 
+class DynamicAIForm(FlaskForm):
+    submit = SubmitField("Execute")
+
 
 class InferenceForm(FlaskForm):
     problem_id = SelectField(

@@ -19,6 +19,8 @@ class BaseConfigurations:
     MODEL_ARCHS_DIR = os.path.join(PROJECT_DIR, 'grey_matter', 'model_archs')
 
     WEIGHTS_DIR = os.path.join(PROJECT_DIR, 'grey_matter', 'weights')
+    
+    TRAINING_FROM_SCRATCH_WEIGHTS_DIR = os.path.join(PROJECT_DIR, 'grey_matter', 'weights', 'training_from_scratch_weights')
 
     UPLOADS_DIR = os.path.join(PROJECT_DIR, 'grey_matter', 'uploads')
     os.makedirs(UPLOADS_DIR, exist_ok=True)
@@ -35,7 +37,6 @@ class BaseConfigurations:
         REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 
 
-    # REDIS_HOST = os.getenv("REDIS_HOST", "redis")
     REDIS_PORT = os.getenv("REDIS_PORT", "6379")
 
     SOCKETIO_MESSAGE_QUEUE = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'

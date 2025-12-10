@@ -1,0 +1,33 @@
+body{
+    max-width:90%;
+    margin:20px auto;
+    padding:0 20px;
+
+    display:grid;
+    grid-template-columns:380px 1fr;
+    grid-template-rows:auto auto auto;
+    gap:20px;
+}
+
+/* Header spans both columns */
+.toggle-header{
+    grid-column:1 / -1;
+}
+
+/* Controls Left Column – spans rows */
+.container{
+    grid-column:1;
+    grid-row:2 / span 2;
+}
+
+/* Output */
+#output-container{
+    grid-column:2;
+    grid-row:2;
+}
+
+/* Logs */
+.log-panel{
+    grid-column:2;
+    grid-row:3;
+}

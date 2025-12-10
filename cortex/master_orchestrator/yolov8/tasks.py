@@ -41,10 +41,11 @@ def detect(self, img_byts_file, modelinfo, output_folder_path):
     return detect_using_yolov8(_yolov8_model, img_byts_file, modelinfo, map_location, output_folder_path)
 
 @celery.task(bind=True)
-def prepare_dataset(self, image_folder, json_path, output_folder, class_id):
-    processor = YOLOv8OBBProcessor(image_folder, json_path, output_folder, class_id)
+def prepare_dataset(self, params):
+    set_active_arch(params['dnnarch'])
+    processor = YOLOv8OBBProcessor(params['images_folder_path'], params['via_annotation_file_path'], params['output_folder_path'])
     processor.process()
-    return f"Dataset prepared at {output_folder}"
+    return f"Dataset prepared at {params['output_folder_path']}"
 
 @celery.task(bind=True)
 def train(self, params):

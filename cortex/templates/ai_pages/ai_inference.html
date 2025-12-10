@@ -5,136 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Inference</title>
     <link rel="icon" type="image/png" sizes="16x16S" href="{{ url_for('static', filename='favicons/favicon-16x16.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_inference.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <h1>NEX AI</h1>
-        <div class="form-group mode">
-            <label for="mode" class="form-label">Mode</label>
-            <select id="mode" class="form-input">
-                <option value="inference">Inference</option>
-                <option value="bulk_inference">Bulk Inference</option>
-                <option value="train">Train</option>
-                <option value="prepare_dataset">Prepare Dataset</option>
-            </select>
+
+        <!-- Clickable Header -->
+        <h1 id="toggle-header" class="toggle-header">
+            NEX-AI
+            <span class="arrow">▼</span>
+        </h1>
+
+        <!-- Collapsible content -->
+        <div id="collapsible-form" class="form-wrapper open">
+
+            <div class="form-group mode">
+                <label for="mode" class="form-label">Mode</label>
+                <select id="mode" class="form-input">
+                    <option value="inference">Inference</option>
+                    <option value="bulk_inference">Bulk Inference</option>
+                    <option value="train">Train</option>
+                    <option value="prepare_dataset">Prepare Dataset</option>
+                </select>
+            </div>
+
+            <form id="dynamic-form" method="POST" enctype="multipart/form-data" class="inference-form">
+                {{ dynamic_ai_form.hidden_tag() }}
+
+                <div id="dynamic-fields"></div>
+
+                {{ dynamic_ai_form.submit(class="btn")}}
+            </form>
+
         </div>
-
-        <form action="/ai_prepare_dataset" method="POST" enctype="multipart/form-data" class="inference-form">
-            {{ prepare_dataset_form.hidden_tag() }}
-            
-            <div class="form-group models-group">
-                {{ prepare_dataset_form.models_list.label(class="form-label") }}
-                {{ prepare_dataset_form.models_list(class="form-input") }}
-            </div>
-
-            <div class="form-group input_image_folder_path-upload-input-group">
-                {{ prepare_dataset_form.input_images_folder_path.label(class="form-label") }}
-                {{ prepare_dataset_form.input_images_folder_path(class="form-input upload-input") }}
-            </div>
-
-            <div class="form-group input_annotations_folder_path-upload-input-group">
-                {{ prepare_dataset_form.input_annotations_folder_path.label(class="form-label") }}
-                {{ prepare_dataset_form.input_annotations_folder_path(class="form-input upload-input") }}
-            </div>
-
-            <div class="form-group">
-                {{ prepare_dataset_form.submit(class="btn") }}
-            </div>
-        </form>
-
-        <!-- <form action="/ai_train" method="POST" enctype="multipart/form-data" class="inference-form">
-            {{ train_form.hidden_tag() }}
-            <div class="form-group models-group">
-                {{ train_form.models_list.label(class="form-label") }}
-                {{ train_form.models_list(class="form-input") }}
-            </div>
-
-            <div class="form-group">
-                {{ train_form.epochs.label(class="form-label") }}
-                {{ train_form.epochs(class="form-input") }}
-            </div>
-
-            <div class="form-group">
-                {{ train_form.imgsz.label(class="form-label") }}
-                {{ train_form.imgsz(class="form-input") }}
-            </div>
-
-            <div class="form-group">
-                {{ train_form.batch_size.label(class="form-label") }}
-                {{ train_form.batch_size(class="form-input") }}
-            </div>
-
-            <div class="form-group">
-                {{ train_form.dataset_yaml_path.label(class="form-label") }}
-                {{ train_form.dataset_yaml_path(class="form-input upload-input") }}
-            </div>
-
-            <div class="form-group">
-                {{ train_form.experiment_name.label(class="form-label") }}
-                {{ train_form.experiment_name(class="form-input") }}
-            </div>
-
-            <div class="form-group">
-                {{ train_form.submit(class="btn") }}
-            </div>
-        </form> -->
-
-        <form action="/ai_train" method="POST" enctype="multipart/form-data" class="inference-form">
-            {{ train_form.hidden_tag() }}
-            <div class="form-group models-group">
-                {{ train_form.models_list.label(class="form-label") }}
-                {{ train_form.models_list(class="form-input") }}
-            </div>
-
-            <div id="dynamic-train-params"></div>
-
-            <div class="form-group">
-                {{ train_form.submit(class="btn") }}
-            </div>
-        </form>
-
-        <form action="/ai_inference" method="POST" enctype="multipart/form-data" class="inference-form">
-            {{ inference_form.hidden_tag() }}
-            
-            <div class="form-group problem-id-group">
-                {{ inference_form.problem_id.label(class="form-label") }}
-                {{ inference_form.problem_id(class="form-input") }}
-            </div>
-
-            <div class="form-group upload-input-group">
-                {{ inference_form.upload_image.label(class="form-label") }}
-                {{ inference_form.upload_image(class="form-input upload-input") }}
-            </div>
-
-            <div class="form-group">
-                {{ inference_form.submit(class="btn") }}
-            </div>
-        </form>
-
-        <form action="/predict" method="POST" enctype="multipart/form-data" class="inference-form">
-            {{ bulk_inference_form.hidden_tag() }}
-            
-            <div class="form-group problem-id-group">
-                {{ bulk_inference_form.problem_id.label(class="form-label") }}
-                {{ bulk_inference_form.problem_id(class="form-input") }}
-            </div>
-
-            <div class="form-group input_image_folder_path-upload-input-group">
-                {{ bulk_inference_form.input_images_folder_path.label(class="form-label") }}
-                {{ bulk_inference_form.input_images_folder_path(class="form-input upload-input") }}
-            </div>
-            
-            <div class="form-group">
-                {{ inference_form.submit(class="btn") }}
-            </div>
-        </form>
     </div>
 
-    <div id="output-container" class="output-container"></div>
+    <div id="output-container" class="output-container">
+        <!-- Dynamic content goes here -->
+        <div id="output-content"></div>
+        <!-- Fullscreen toggle always stays -->
+        <button id="fullscreen-btn" title="Fullscreen">
+            ⛶
+        </button>
+    </div>
 
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="{{ url_for('static', filename='js/ai_inference.js') }}"></script>
+    <div id="log-panel" class="log-panel">
+        <div id="log-header" class="log-header">
+            <span>Live Logs</span>
+            <div class="log-controls">
+                <button id="toggle-log">–</button>
+            </div>
+        </div>
+
+        <div id="log-body" class="log-body"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <!-- Toggle Controller -->
+    <script>
+        const header = document.getElementById("toggle-header");
+        const wrapper = document.getElementById("collapsible-form");
+
+        header.addEventListener("click", () => {
+            wrapper.classList.toggle("open");
+            header.classList.toggle("closed");
+        });
+    </script>
 </body>
 </html>

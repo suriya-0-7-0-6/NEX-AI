@@ -5,7 +5,7 @@
 const HOST = "http://10.4.71.24:5000";
 
 // Connect to Socket.IO server
-const socketio = io(HOST);
+const socketio = io();
 
 // ============================
 // Socket.IO Event Listeners
@@ -88,6 +88,10 @@ socketio.on('train_results', data => {
 // Form Handling
 // ============================
 // Toggle forms based on dropdown
+
+
+
+
 document.addEventListener("DOMContentLoaded", function () {
     const modeSelect = document.getElementById("mode");
     const trainForm = document.querySelector('form[action="/ai_train"]');
@@ -147,6 +151,12 @@ document.addEventListener("DOMContentLoaded", function () {
                                 value="${param.default ?? ''}" min="${param.min ?? ''}" max="${param.max ?? ''}">`;
                         break;
 
+                    case "file":
+                        inputField = `
+                            <input name="${param.name}" class="form-input" type="file"
+                                accept="${param.accpet ?? ''}">`;
+                        break;
+
                     default:
                         inputField = `<input name="${param.name}" class="form-input" type="text">`;
                 }
@@ -185,57 +195,3 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
-
-// document.addEventListener("DOMContentLoaded", function () {
-//     const modeSelect = document.getElementById("mode");
-//     const trainForm = document.querySelector('form[action="/ai_train"]');
-//     const inferenceForm = document.querySelector('form[action="/ai_inference"]');
-//     const prepareDatasetForm = document.querySelector('form[action="/ai_prepare_dataset"]');
-//     const bulkinferenceForm = document.querySelector('form[action="/predict"]');
-
-//     // Toggle forms based on dropdown
-//     function toggleForms() {
-//         const selectedMode = modeSelect.value;
-
-//         trainForm.style.display = "none";
-//         inferenceForm.style.display = "none";
-//         prepareDatasetForm.style.display = "none";
-//         bulkinferenceForm.style.display = "none";
-
-//         if (selectedMode === "train") {
-//             trainForm.style.display = "block";
-//         } else if (selectedMode === "inference") {
-//             inferenceForm.style.display = "block";
-//         } else if (selectedMode === "prepare_dataset") {
-//             prepareDatasetForm.style.display = "block";
-//         } else if (selectedMode === "bulk_inference") {
-//             bulkinferenceForm.style.display = "block";
-//         }
-//     }
-
-//     toggleForms(); // Initial call
-//     modeSelect.addEventListener("change", toggleForms);
-
-//     // Intercept all form submissions and send them to HOST
-//     const allForms = document.querySelectorAll("form");
-//     allForms.forEach(form => {
-//         form.addEventListener("submit", function (event) {
-//             event.preventDefault();
-//             const formData = new FormData(form);
-
-//             // Use absolute URL if action is relative
-//             let actionUrl = form.action.startsWith("http") ? form.action : HOST + form.action;
-
-//             fetch(actionUrl, {
-//                 method: 'POST',
-//                 body: formData
-//             })
-//             .then(response => {
-//                 if (!response.ok) {
-//                     console.error(`Request failed: ${response.status}`);
-//                 }
-//             })
-//             .catch(err => console.error("Fetch error:", err));
-//         });
-//     });
-// });

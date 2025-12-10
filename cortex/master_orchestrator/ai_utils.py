@@ -27,7 +27,19 @@ def fetch_configs(problem_id):
     return problem_configurations.CONFIG if hasattr(problem_configurations, 'CONFIG') else None
 
 
+def fetch_model_specific_training_configs(model_arch):
+    from cortex.forms.dynamic_form_fields import TRAINING_CONFIGS
+    return TRAINING_CONFIGS.get(model_arch, [])
+
+def fetch_model_specific_prepare_dataset_configs(model_arch):
+    from cortex.forms.dynamic_form_fields import PREPARE_DATASET_CONFIGS
+    return PREPARE_DATASET_CONFIGS.get(model_arch, [])
+
+def fetch_problem_id_specific_inference_configs(problem_id):
+    from cortex.forms.dynamic_form_fields import INFERENCE_CONFIGS
+    return INFERENCE_CONFIGS.get(problem_id, [])
+
+
 def fetch_all_model_archs():
     from grey_matter.model_archs.List_of_model_archs import MODEL_ARCHS_LIST
-    print(MODEL_ARCHS_LIST)
     return MODEL_ARCHS_LIST
