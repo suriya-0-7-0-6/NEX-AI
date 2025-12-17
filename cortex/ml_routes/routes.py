@@ -142,3 +142,86 @@ def ai_prepare_dataset():
         prepare_dataset_task.apply_async(args=[params])
         return {"status": "Preparing Dataset"}, 202
     return render_template("ai_pages/ai_inference.html", dynamic_ai_form=dynamic_ai_form)
+
+
+
+@ml_api.route('/predict', methods=['POST'])
+def get_detections():
+    import torch
+    import numpy as np
+    import cv2
+    import os
+    from flask import jsonify
+    from cortex.master_orchestrator.yolov8.utils import load_model
+    from werkzeug.utils import secure_filename
+
+    file = request.files.get("image")
+    problem_id = request.form.get("problem_id")
+
+    if not file or not problem_id:
+        return {"error": "Missing image or problem_id"}, 400
+
+    modelinfo = fetch_configs(problem_id)
+    if not modelinfo:
+        return {"error": "Model configuration not found"}, 404
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model = load_model(weights=modelinfo["weights_path"], map_location=device)
+
+    file_bytes = file.read()
+    np_img = np.frombuffer(file_bytes, np.uint8)
+    img = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
+    if img is None:
+        return {"error": "Invalid image file"}, 400
+
+    # Run inference
+    results = model.predict(
+        source=img,
+        imgsz=modelinfo.get("input_size", 640),
+        conf=modelinfo.get("confidence_threshold", 0.25),
+        save=False,
+        device=device
+    )
+
+    filename = secure_filename(file.filename)
+    output_json = {
+        filename: {
+            "filename": filename,
+            "size": "-1",
+            "regions": [],
+            "file_attributes": {}
+        }
+    }
+
+    if results and hasattr(results[0], 'obb') and results[0].obb is not None:
+        obb_data = results[0].obb
+        xyxyxyxy = obb_data.xyxyxyxy.cpu().numpy()
+        confs = obb_data.conf.cpu().numpy()
+        clss = obb_data.cls.cpu().numpy()
+        class_names = results[0].names
+
+        for i, pts in enumerate(xyxyxyxy):
+            # Ensure we work with flat 8-length arrays
+            pts = np.array(pts).flatten()
+            if pts.shape[0] != 8:
+                continue  # skip invalid ones
+
+            all_points_x = [int(round(pts[j])) for j in range(0, 8, 2)]
+            all_points_y = [int(round(pts[j])) for j in range(1, 8, 2)]
+
+            class_id = int(clss[i])
+            label = class_names[class_id]
+
+            region = {
+                "shape_attributes": {
+                    "name": "polygon",
+                    "all_points_x": all_points_x,
+                    "all_points_y": all_points_y
+                },
+                "region_attributes": {
+                    "Label": label
+                }
+            }
+            output_json[filename]["regions"].append(region)
+
+    return jsonify(output_json), 200
